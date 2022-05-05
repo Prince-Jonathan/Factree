@@ -6,9 +6,11 @@ from telegram import Update, InlineQueryResultArticle, InputTextMessageContent, 
 import logging
 import pandas as pd
 import numpy as np
+import tabula
+import os
 from telegram_bot.app import engine
 import datetime
-from telegram_bot.scripts import get_lot_code, get_vin
+from telegram_bot.scripts import get_lot_code, get_vin, get_storage_loc, send_error_telegram
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
@@ -33,37 +35,52 @@ def import_doc(update: Update, context: CallbackContext):
     # download file to temp.xlsx 
     sheet_no = 0
     if update.message.caption.upper() == 'VIN':
-        with open("vin_temp.xlsx", 'wb') as f:
+        with open("vin_temp", 'wb') as f:
             context.bot.get_file(update.message.document).download(out=f)
         # df = pd.read_excel("vin_temp.xlsx", index_col=0, skiprows=range(0,3), usecols="A:L")
-        temp = pd.ExcelFile(r"C:\Users\LogisticsUser02\Documents\VIN_import\backend\vin_temp.xlsx")
-        df = pd.DataFrame()
-        # pick the right sheet with vin list
-        for sheet in temp.sheet_names:
-            if "VIN" in sheet.upper() or "TTMG" in sheet.upper():
-                sheet_no +=1
-                # x = df.parse(sheet, index_col=0, skiprows=range(0,3), usecols="A:L")
-                df = temp.parse(sheet)
-                # select header row
-                header_row = df.where(df=='Lot No.').dropna(how='all').dropna(axis="columns").index[0]
-                df.columns=df.iloc[header_row]
-                df.drop(range(0, header_row+1), inplace=True)
-                df.set_index("Lot No.", inplace=True)
-                # format headers
-                df.columns = df.columns.str.replace(" ", "_",regex=False)
-                df.columns = df.columns.str.lower()
-                df.columns = df.columns.str.replace(".","",regex=False)
-                df.index.name = df.index.name.lower().replace(" ","_")[:-1]
-                # select some columns
-                df = df[['job_no','skid_no','vin_no','katashiki','colour', 'engine_no', 'engine_cap', 'container_no']]
-                # remove zero rows, if any
-                df = df.loc[(df!=0).any(axis=1)]
-            print(f"No. of accessed sheets: {sheet_no}")
         try:
+            temp = pd.ExcelFile(r"vin_temp")
+            df = pd.DataFrame()
+            # pick the right sheet with vin list
+            for sheet in temp.sheet_names:
+                if ("VIN" in sheet.upper()) or ("TTMG" in sheet.upper()):
+                    sheet_no +=1
+                    # x = df.parse(sheet, index_col=0, skiprows=range(0,3), usecols="A:L")
+                    data = temp.parse(sheet)
+                    # select header row
+                    header_row = data.where(data=='Lot No.').dropna(how='all').dropna(axis="columns").index[0]
+                    data.columns=data.iloc[header_row]
+                    data.drop(range(0, header_row+1), inplace=True)
+                    data.set_index("Lot No.", inplace=True)
+                    # format headers
+                    data.columns = data.columns.str.replace(" ", "_",regex=False)
+                    data.columns = data.columns.str.lower()
+                    data.columns = data.columns.str.replace(".","",regex=False)
+                    data.index.name = data.index.name.lower().replace(" ","_")[:-1]
+                    # select some columns
+                    data = data[['job_no','skid_no','vin_no','katashiki','colour', 'engine_no', 'engine_cap', 'container_no']]
+                    # remove zero rows, if any
+                    data = data.loc[(data!=0).any(axis=1)]
+                    df= pd.concat([data,df])
+                print(f"No. of accessed sheets: {sheet_no}")
+        except:
+            df = pd.DataFrame()
+            tables = tabula.read_pdf(r"vin_temp", pages = "all",stream=True,area=(138.391,15.26,562.508,794.036))
+            for temp in tables:
+                temp.columns = temp.columns.str.replace(" ", "_",regex=False)
+                temp.columns = temp.columns.str.lower()
+                temp.columns = temp.columns.str.replace(".","",regex=False)
+                temp.set_index("lot_no", inplace=True)
+                temp = temp[['job_no','skid_no','vin_no','katashiki','colour', 'engine_no', 'engine_cap', 'container_no']]
+                df = pd.concat([temp, df])
+        try:
+            # delete temporary file
+            # os.remove(r"vin_temp")
             # merge database vin with new vin = merged_list
             dvin = pd.DataFrame()
             with engine.connect() as conn, conn.begin():
                 dvin = pd.read_sql_query("SELECT * FROM vin_list;", conn, index_col="lot_no")
+                dvin = dvin.drop_duplicates().sort_index(axis=0)
             print("query for database vin list: success")
             print("Existing database list:")
             print(dvin)
@@ -74,7 +91,7 @@ def import_doc(update: Update, context: CallbackContext):
             if not dvin.empty:
                 merged_list = pd.concat([dvin, df]).drop_duplicates().sort_index(axis=0)
             else:
-                merged_list = df.sort_index(axis=0)
+                merged_list = df.sort_index(axis=0).drop_duplicates().sort_index(axis=0)
             print("merged list:")
             print(merged_list)
             # commit dataframe to sql database
@@ -98,6 +115,7 @@ def import_doc(update: Update, context: CallbackContext):
         # df = pd.read_excel("storage_area_temp.xlsx", index_col=0, skiprows=range(0,3), usecols="A:L")
         df = pd.read_excel(r"C:\Users\LogisticsUser02\Documents\VIN_import\backend\storage_area_temp.xlsx", sheet_name="SKD Storage", header=2, usecols=['#','A','B','C','D','E','F','G','H','I','J','K'], index_col=0, nrows=5)
         df.index.name = 'row'
+        os.remove(r"C:\Users\LogisticsUser02\Documents\VIN_import\backend\storage_area_temp.xlsx")
         try:
             # commit dataframe to sql database
             df.to_sql("skd_storage", engine, if_exists='replace')
@@ -110,6 +128,50 @@ def import_doc(update: Update, context: CallbackContext):
             context.bot.send_message(chat_id=update.effective_chat.id,reply_to_message_id=update.message.message_id,  text="Something went wrong...🤔")
             context.bot.send_message(chat_id="848287261", text="{user} [@{username}] could not access function: {command} ".format(user=str(update["message"]["chat"]["first_name"]), username=str(update["message"]["chat"]["username"]), command=str(update["message"]["text"])))
 
+    if update.message.caption.upper() == 'SEQ':
+        print('Attempting to develop container receiving sequence...')
+        with open("vin_sequence", 'wb') as f:
+            context.bot.get_file(update.message.document).download(out=f)
+            # df = pd.read_excel("vin_sequence.xlsx", index_col=0, skiprows=range(0,3), usecols="A:L")
+        df = pd.DataFrame()
+        try:
+            temp = pd.ExcelFile(r"vin_sequence")
+            # pick the right sheet with vin list
+            for sheet in temp.sheet_names:
+                if ("VIN" in sheet.upper()) or ("TTMG" in sheet.upper()):
+                    sheet_no +=1
+                    # x = df.parse(sheet, index_col=0, skiprows=range(0,3), usecols="A:L")
+                    data = temp.parse(sheet)
+                    # select header row
+                    header_row = data.where(data=='Lot No.').dropna(how='all').dropna(axis="columns").index[0]
+                    data.columns=data.iloc[header_row]
+                    data.drop(range(0, header_row+1), inplace=True)
+                    # remove zero rows, if any
+                    data = data.loc[(data!=0).any(axis=1)]
+                    duplicates = data[data.duplicated(subset=['Lot No.'])]['Lot No.']
+                    if duplicates.count():
+                        context.bot.send_message(chat_id=update.effective_chat.id, text="VIN List has duplicates of: \n {lots}".format(lots=duplicates.to_string()))
+                    df= pd.concat([data,df])
+                print(df)
+                print(f"No. of accessed sheets: {sheet_no}")
+        except:
+            tables = tabula.read_pdf(r"vin_sequence", pages = "all",stream=True,area=(138.391,15.26,562.508,794.036))
+            for temp in tables:
+                df = pd.concat([temp, df])
+    # try:
+        # delete temporary file
+        #os.remove(r"vin_sequence")
+
+        # generate container receiving sequence
+        df.sort_values(by='Lot No.', ascending=False, inplace=True)
+        sequence = df['Container No.'].drop_duplicates()
+        # sequence.to_clipboard(index=False)
+        sequence = sequence.to_string(index=False)
+        context.bot.send_message(chat_id=update.effective_chat.id, text=sequence)
+    # except:
+    #     print("Generating container receiving sequence: failed")
+    #     context.bot.send_message(chat_id=update.effective_chat.id, text="There was a problem generating container receiving sequence😒")
+    #     context.bot.send_message(chat_id="848287261", text="{user} [@{username}] could not access function: {command} ".format(user=str(update["message"]["chat"]["first_name"]), username=str(update["message"]["chat"]["username"]), command=str(update["message"]["text"])))
 
 #implementing import_doc handler
 import_doc_handler = MessageHandler(Filters.document, import_doc)
@@ -181,6 +243,8 @@ def loc(update: Update, context: CallbackContext):
         repair_area_status = repair_area_status[repair_area_status["lot_no"].str.startswith(lot)]
         line_data = line_data[line_data["lot_no"]==lot]
         try:
+            # todo: check non-dispatch as well
+
             # search cbu yard
             if lot in cbu_yard:
                 loc = "CBU Yard " + cbu_yard_names[cbu_yard.index(lot)]
@@ -198,8 +262,7 @@ def loc(update: Update, context: CallbackContext):
                 print("Requested loc of {lot}:{loc}".format(loc=loc,lot=lot))
             # search storage area
             else:
-                x = skd_storage_data.where(skd_storage_data==lot.upper()).dropna(how="all").dropna(axis="columns")
-                loc = "{y}{x}".format(x=x.index[0], y=x.columns[0])
+                loc = get_storage_loc(skd_storage_data, lot)
                 context.bot.send_message(chat_id=update.effective_chat.id, text=lot+": "+loc)
                 print("Requested loc of {lot}:{loc}".format(loc=loc,lot=lot))
         except:
@@ -272,9 +335,9 @@ def serial(update: Update, context: CallbackContext):
             clip_board = pd.DataFrame([serial])
             clip_board.to_clipboard(index=False)
             context.bot.send_message(chat_id=update.effective_chat.id, text=lot+": "+serial)
-            print("Requested engine_no of {lot}:{serial}".format(serial=serial,lot=lot))
+            print("Requested serial of {lot}:{serial}".format(serial=serial,lot=lot))
         except:
-            print("Engine no. of queried lot is not available")
+            print("serial of queried lot is not available")
             context.bot.send_message(chat_id=update.effective_chat.id, text="Lot {lot} is not available 😒".format(lot=lot))
             context.bot.send_message(chat_id="848287261", text="{user} [@{username}] could not access function: {command} ".format(user=str(update["message"]["chat"]["first_name"]), username=str(update["message"]["chat"]["username"]), command=str(update["message"]["text"])))
 
@@ -351,7 +414,7 @@ def ok_units_list(update: Update, context: CallbackContext):
     with open(f, 'rb') as f:
         context.bot.send_document(update.effective_chat.id, f, caption="Here is your draft📃")
         context.bot.send_message(chat_id="848287261", text="{user} successfully accessed function:\n {command} ".format(user=str(update["message"]["chat"]["first_name"]), command=str(update["message"]["text"])))
-
+    os.remove(f)
 
 #implementing ok_units_list handler
 ok_units_list_handler = CommandHandler('oul', ok_units_list)
@@ -379,25 +442,37 @@ def supply_line(update: Update, context: CallbackContext):
     except:
         print("Warning: No data information on line status")
         y = []
-    for lot in context.args:
+    for i, lot in enumerate(context.args):
         lot = get_lot_code(lot)
-        try:
-            y.reverse()
-            if len(y) < 8:
-                y.append(lot)
-            else:
-                y.append(lot.upper())
-                x.append(y.pop(0))
-            y.reverse()
-            storage_area = storage_area[np.invert(storage_area==lot)].fillna(np.nan)
-            print("Pushed {lot}".format(lot=lot))
-        except:
-            print("error while trying to push {}".format(lot))
-            context.bot.send_message(chat_id="848287261", text="{user} [@{username}] could not access function: {command} ".format(user=str(update["message"]["chat"]["first_name"]), username=str(update["message"]["chat"]["username"]), command=str(update["message"]["text"])))
-            context.bot.send_message(chat_id=update.effective_chat.id, text="Pushing {lot} was unsuccessful 😒".format(lot=lot))
-
-    print(x,y)
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Push was successful 👍")
+        # try:
+        y.reverse()
+        if len(y) < 8:
+            y.append(lot)
+        else:
+            y.append(lot.upper())
+            x.append(y.pop(0))
+        y.reverse()
+        if i == len(context.args)-1:
+            # update next lot location's info
+            print(lot)
+            loc = get_storage_loc(storage_area,lot)
+            curr_col = loc[0]
+            col = storage_area.columns.to_list()
+            col.remove(col[-1])
+            row = storage_area.index.to_list()
+            print("next row", (row.index(int(loc[1]))-1)%len(row))
+            next_ind = row[(row.index(int(loc[1]))-1)%len(row)]
+            new_col = col[(col.index(curr_col)+1)%len(col)] if curr_col == 5  else curr_col
+            next_lot_loc = new_col+str(next_ind)
+            next_lot_loc = pd.DataFrame({"next":[next_lot_loc]})
+            next_lot_loc.to_sql('next_lot_loc', engine, index=False, if_exists='replace')
+        # remove pushed lot from storage area
+        storage_area = storage_area[np.invert(storage_area==lot)].fillna(np.nan)
+        print("Pushed {lot}".format(lot=lot))
+        # except:
+        #     print("error while trying to push {}".format(lot))
+        #     context.bot.send_message(chat_id="848287261", text="{user} [@{username}] could not access function: {command} ".format(user=str(update["message"]["chat"]["first_name"]), username=str(update["message"]["chat"]["username"]), command=str(update["message"]["text"])))
+        #     context.bot.send_message(chat_id=update.effective_chat.id, text="Pushing {lot} was unsuccessful 😒".format(lot=lot))
     cbu_yard_status = pd.DataFrame({"lot_no":x})
     if not cbu_yard_status.empty:
         cbu_yard_status = cbu_yard_status[np.invert(cbu_yard_status['lot_no'].str.endswith('[In-Repair]'))]
@@ -405,6 +480,7 @@ def supply_line(update: Update, context: CallbackContext):
     storage_area.to_sql("skd_storage", engine, if_exists='replace')
     cbu_yard_status.to_sql("cbu_yard_status", engine, index=False, if_exists='replace')
     line_status.to_sql("line_status", engine, index=False, if_exists='replace')
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Push was successful 👍")
     # with engine.connect() as con:
         # con.execute('ALTER TABLE "cbu_yard_status" ADD PRIMARY KEY ("lot_no");')
         # con.execute('ALTER TABLE "line_status" ADD PRIMARY KEY ("lot_no");')
@@ -583,12 +659,13 @@ def restore(update: Update, context: CallbackContext):
                 if len(line_data) > 8:
                     cbu_yard.append(line_data.iloc[8], ignore_index=True)
                     line_data = line_data = line_data.iloc[range(0,8)]                                         
-                line_data.to_sql('line_status', engine, if_exists='replace')
+                line_data.to_sql('line_status', engine, if_exists='replace', index=False)
                 # delete lot from repair area 
                 repair_area_status = repair_area_status[np.invert(repair_area_status['lot_no'].str.startswith(lot))]
                 repair_area_status.to_sql("repair_area_status", engine, index=False, if_exists='replace')
                 msg = f"{lot} has been restored to {restore_loc}"
                 context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
+                context.bot.send_message(chat_id="848287261", text="{user} restored {lot} to {restore_loc} ".format(user=str(update["message"]["chat"]["first_name"]), lot=lot, restore_loc=restore_loc))
         else:
             context.bot.send_message(chat_id=update.effective_chat.id, text="You have to specify lot number of unit restored")
     except:
@@ -681,6 +758,48 @@ def dispatch(update: Update, context: CallbackContext):
 # implementing handler
 dispatch_handler = CommandHandler('dis', dispatch)
 
+# update line information
+def update_line(update:Update, context:CallbackContext):
+    station = context.args[0].upper()
+    new_lot = get_lot_code(context.args[1])
+    print('attempting to update line')
+    try:
+        line = pd.read_sql_query("SELECT * FROM line_status;", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        print('successfully accessed line status')
+    except:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Line information is currently unavailable")
+        return
+    try:
+        storage_area = pd.read_sql_query("SELECT * FROM skd_storage;", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        print('successfully accessed storage area status')
+    except:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Attempt to access storage area info was unsuccessful")
+        return
+    line.iloc[station_names.index(station)]= new_lot
+    line.to_sql('line_status', engine, index=False, if_exists='replace')
+    # ****refactor code set for deleting lot if it is below*******
+    storage_area[np.invert(storage_area==new_lot)].fillna(np.nan)
+    storage_area.to_sql('skd_storage', engine, if_exists='replace')
+    context.bot.send_message(chat_id=update.effective_chat.id, text='Line station:{station} now has:{new_lot}'.format(station=station, new_lot=new_lot))
+    print('Line update: successful')
+
+
+# implementing handler
+update_line_handler = CommandHandler('upl', update_line)
+
+# return next lot to line's location
+def next_loc(update:Update, context:CallbackContext):
+    # try:
+    next_loc = pd.read_sql_query('Select * from next_lot_loc ', 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+    next_loc = next_loc.values[0][0]
+    context.bot.send_message(chat_id=update.effective_chat.id, text='Next lot Location at {next_loc}'.format(next_loc=next_loc))
+    # except:
+    #     send_error_telegram(update, context,"Somethnig went wrong🤔")
+    #     print('Error: could not retrieve next lot\'s location')
+
+# implementing handler
+next_loc_handler = CommandHandler('nxt', next_loc)
+
 #implementing default (unknown)
 def joke(update: Update, context: CallbackContext):
     if  "AGENDA" in update.message.text.upper():
@@ -689,8 +808,8 @@ def joke(update: Update, context: CallbackContext):
         context.bot.send_message(chat_id=update.effective_chat.id, reply_to_message_id=int(update["message"]["message_id"]), text="Sure...safety first👊")
     if  "LOL" in update.message.text.upper():
         context.bot.send_message(chat_id=update.effective_chat.id, reply_to_message_id=int(update["message"]["message_id"]), text="😂")
-    if  "LOL" in update.message.text.upper():
-        context.bot.send_message(chat_id=update.effective_chat.id, reply_to_message_id=int(update["message"]["message_id"]), text="😂")
+    # if  "LOL" in update.message.text.upper():
+    #     context.bot.send_message(chat_id=update.effective_chat.id, reply_to_message_id=int(update["message"]["message_id"]), text="😂")
 
 #implementing unknown handler
 joke_handler = MessageHandler(Filters.text, joke)
@@ -722,6 +841,8 @@ dispatcher.add_handler(repair_handler)
 dispatcher.add_handler(restore_handler)
 dispatcher.add_handler(non_dispatch_handler)
 dispatcher.add_handler(dispatch_handler)
+dispatcher.add_handler(update_line_handler)
+dispatcher.add_handler(next_loc_handler)
 dispatcher.add_handler(joke_handler)
 dispatcher.add_handler(unknown_handler)
 
