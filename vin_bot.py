@@ -1,21 +1,23 @@
 '''
 Return the VIN of a specific lot number
 '''
+import os
 from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, Filters,  InlineQueryHandler
 from telegram import Update, InlineQueryResultArticle, InputTextMessageContent, KeyboardButton, ReplyKeyboardMarkup
 import logging
 import pandas as pd
 import numpy as np
 import tabula
-import os
 from telegram_bot.app import engine
 import datetime
 from telegram_bot.scripts import get_lot_code, get_vin, get_storage_loc, send_error_telegram
 
+PORT = int(os.environ.get('PORT', 5000))
+TOKEN = '5105572453:AAGjKUhrM_pKVY-e6ghoWhFWIRo4-Db4vxc'
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
 
-updater = Updater(token='5105572453:AAGjKUhrM_pKVY-e6ghoWhFWIRo4-Db4vxc', use_context=True)
+updater = Updater(token=TOKEN, use_context=True)
 dispatcher = updater.dispatcher
 
 station_names = ['T1','T4','T5','T6','INSP1', 'INSP2','INSP3','INSP4']
@@ -848,9 +850,7 @@ dispatcher.add_handler(unknown_handler)
 
 # updater.start_polling()
 # updater.idle()
-telegram_bot_token = '5105572453:AAGjKUhrM_pKVY-e6ghoWhFWIRo4-Db4vxc'
 updater.start_webhook(listen="0.0.0.0",
                       port=int(os.environ.get('PORT', 5000)),
-                      url_path=telegram_bot_token,
-                      webhook_url=  "https://factree.herokuapp.com"+ telegram_bot_token
-                      )
+                      url_path=TOKEN)
+updater.bot.setWebhook("https://factree.herokuapp.com"+ TOKEN)
