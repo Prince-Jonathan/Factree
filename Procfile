@@ -1,1 +1,1 @@
-web: python vin_bot.py $PORT
+web: py vin_bot.py
