@@ -849,11 +849,11 @@ def main():
     dispatcher.add_handler(unknown_handler)
 
     # updater.start_polling()
-    # updater.idle()
     updater.start_webhook(listen="0.0.0.0",
-                          port=int(os.environ.get('PORT', 5000)),
+                          port=int(PORT),
                           url_path=TOKEN)
-    updater.bot.setWebhook("https://factree.herokuapp.com"+ TOKEN)
+    updater.bot.setWebhook("https://factree.herokuapp.com/"+ TOKEN)
+    updater.idle()
 
-if __name__=='main':
+if __name__=='__main__':
     main()
