@@ -855,9 +855,9 @@ def main():
 
     # updater.start_polling()
     updater.start_webhook(listen="0.0.0.0",
-                          port=int(PORT),
-                          url_path=TOKEN)
-    updater.bot.setWebhook("https://factree.herokuapp.com/"+ TOKEN)
+                            port=int(PORT),
+                            url_path=TOKEN,
+                            webhook_url="https://factree.herokuapp.com/"+ TOKEN)
     updater.idle()
 
 if __name__=='__main__':
