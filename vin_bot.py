@@ -16,7 +16,7 @@ PORT = int(os.environ.get('PORT', 5000))
 TOKEN = '5105572453:AAGjKUhrM_pKVY-e6ghoWhFWIRo4-Db4vxc'
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
-logger = loggin.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 updater = Updater(token=TOKEN, use_context=True)
 dispatcher = updater.dispatcher
