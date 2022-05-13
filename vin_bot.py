@@ -16,6 +16,7 @@ PORT = int(os.environ.get('PORT', 5000))
 TOKEN = '5105572453:AAGjKUhrM_pKVY-e6ghoWhFWIRo4-Db4vxc'
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
+logger = loggin.getLogger(__name__)
 
 updater = Updater(token=TOKEN, use_context=True)
 dispatcher = updater.dispatcher
@@ -823,6 +824,9 @@ def unknown(update: Update, context: CallbackContext):
 #implementing unknown handler
 unknown_handler = MessageHandler(Filters.command, unknown)
 
+def error(update:Update, context:CallbackContext):
+    logger.warning('Update: {update} caused error: {error}'.format(update=update,error=context.error))
+
 def main():
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(vin_handler)
@@ -847,6 +851,7 @@ def main():
     dispatcher.add_handler(next_loc_handler)
     dispatcher.add_handler(joke_handler)
     dispatcher.add_handler(unknown_handler)
+    dispatcher.add_error_handler(error)
 
     # updater.start_polling()
     updater.start_webhook(listen="0.0.0.0",
