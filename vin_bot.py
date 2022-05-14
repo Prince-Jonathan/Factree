@@ -14,6 +14,7 @@ from telegram_bot.scripts import get_lot_code, get_vin, get_storage_loc, send_er
 
 PORT = int(os.environ.get('PORT', 443))
 TOKEN = '5105572453:AAGjKUhrM_pKVY-e6ghoWhFWIRo4-Db4vxc'
+DATABASE_URI = 'postgres://rxxavqzelrynsk:8aec395e670af85437c5c603f01b4c8f608ed7eb2c86e568d2864e53cb1dc3a8@ec2-44-196-223-128.compute-1.amazonaws.com:5432/d96dk3m2laba85'
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -184,7 +185,7 @@ def vin(update: Update, context: CallbackContext):
     for lot in context.args:
         lot = get_lot_code(lot)
         try:
-            df = pd.read_sql_query("SELECT vin_no FROM vin_list WHERE lot_no = \'%s\';"%lot.upper(), 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+            df = pd.read_sql_query("SELECT vin_no FROM vin_list WHERE lot_no = \'%s\';"%lot.upper(), DATABASE_URI)
             vin = (df.iloc[0,0])
             context.bot.send_message(chat_id=update.effective_chat.id, text=lot.upper()+": "+vin)
             print(f"Requested vin of {lot}:{vin}")
@@ -202,7 +203,7 @@ def lot(update: Update, context: CallbackContext):
     for vin in context.args:
         vin = get_vin(vin)
         try:
-            df = pd.read_sql_query(f"SELECT vin_no, lot_no FROM vin_list WHERE vin_no LIKE '{vin}' LIMIT 1;", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+            df = pd.read_sql_query(f"SELECT vin_no, lot_no FROM vin_list WHERE vin_no LIKE '{vin}' LIMIT 1;", DATABASE_URI)
             if not df.empty:
                 vin_no, lot = df.iloc[0].values
                 context.bot.send_message(chat_id=update.effective_chat.id, text=vin_no+ ": "+lot)
@@ -221,12 +222,12 @@ lot_handler = CommandHandler('lot', lot)
 #receiving lot number and returning storage area location
 def loc(update: Update, context: CallbackContext):
     try:
-        line_data = pd.read_sql_query("SELECT * FROM line_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        line_data = pd.read_sql_query("SELECT * FROM line_status", DATABASE_URI)
     except:
         print("Error: No data on line status")
         line_data = pd.DataFrame({"lot_no":[]})
     try:
-        cbu_yard_data = pd.read_sql_query("SELECT * FROM cbu_yard_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        cbu_yard_data = pd.read_sql_query("SELECT * FROM cbu_yard_status", DATABASE_URI)
         cbu_yard = cbu_yard_data["lot_no"].values
         cbu_yard = cbu_yard.tolist()
         cbu_yard.reverse()
@@ -234,11 +235,11 @@ def loc(update: Update, context: CallbackContext):
         cbu_yard = []
         print("Error: No data on cbu yard status")
     try:
-        repair_area_status = pd.read_sql_query("SELECT * FROM repair_area_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        repair_area_status = pd.read_sql_query("SELECT * FROM repair_area_status", DATABASE_URI)
     except:
         repair_area_status = pd.DataFrame({'lot_no':[""]})
     try:
-        skd_storage_data = pd.read_sql_query("SELECT * FROM skd_storage", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg', index_col='row')
+        skd_storage_data = pd.read_sql_query("SELECT * FROM skd_storage", DATABASE_URI, index_col='row')
     except:
         print("Error: No data on skd storage area status")
     for lot in context.args:
@@ -282,7 +283,7 @@ def col(update: Update, context: CallbackContext):
     for lot in context.args:
         lot = lot.upper()
         try:
-            df = pd.read_sql_query(f"SELECT colour FROM vin_list WHERE lot_no LIKE '{lot[0:2]}____' LIMIT 1;", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+            df = pd.read_sql_query(f"SELECT colour FROM vin_list WHERE lot_no LIKE '{lot[0:2]}____' LIMIT 1;", DATABASE_URI)
             col = (df.iloc[0,0])
             context.bot.send_message(chat_id=update.effective_chat.id, text=lot.upper()+": "+col)
             print("Requested colour of {lot}:{col}".format(col=col,lot=lot))
@@ -299,7 +300,7 @@ def katashiki(update: Update, context: CallbackContext):
     for lot in context.args:
         lot = lot.upper()
         try:
-            df = pd.read_sql_query(f"SELECT katashiki FROM vin_list WHERE lot_no LIKE '{lot[0:2]}____' LIMIT 1;", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+            df = pd.read_sql_query(f"SELECT katashiki FROM vin_list WHERE lot_no LIKE '{lot[0:2]}____' LIMIT 1;", DATABASE_URI)
             kat = (df.iloc[0,0])
             context.bot.send_message(chat_id=update.effective_chat.id, text=lot.upper()+": "+kat)
             print("Requested Katashiki of {lot}:{kat}".format(kat=kat,lot=lot))
@@ -316,7 +317,7 @@ def eng(update: Update, context: CallbackContext):
     for lot in context.args:
         lot = get_lot_code(lot)
         try:
-            df = pd.read_sql_query("SELECT engine_no FROM vin_list WHERE lot_no = \'%s\';"%lot, 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+            df = pd.read_sql_query("SELECT engine_no FROM vin_list WHERE lot_no = \'%s\';"%lot, DATABASE_URI)
             eng = str(df.iloc[0][0])
             context.bot.send_message(chat_id=update.effective_chat.id, text=lot+": "+eng)
             print("Requested engine_no of {lot}:{eng}".format(eng=eng,lot=lot))
@@ -333,7 +334,7 @@ def serial(update: Update, context: CallbackContext):
     for lot in context.args:
         lot = get_lot_code(lot)
         try:
-            df = pd.read_sql_query("SELECT vin_no,engine_no FROM vin_list WHERE lot_no = \'%s\';"%lot, 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+            df = pd.read_sql_query("SELECT vin_no,engine_no FROM vin_list WHERE lot_no = \'%s\';"%lot, DATABASE_URI)
             serial = df.iloc[0]['vin_no']+str(df.iloc[0]['engine_no'])
             clip_board = pd.DataFrame([serial])
             clip_board.to_clipboard(index=False)
@@ -352,7 +353,7 @@ def con(update: Update, context: CallbackContext):
     for lot in context.args:
         lot = get_lot_code(lot)
         try:
-            df = pd.read_sql_query("SELECT container_no FROM vin_list WHERE lot_no = \'%s\';"%lot, 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+            df = pd.read_sql_query("SELECT container_no FROM vin_list WHERE lot_no = \'%s\';"%lot, DATABASE_URI)
             con = (df.iloc[0,0])
             context.bot.send_message(chat_id=update.effective_chat.id, text=lot+": "+con)
             print("Requested container_no of {lot}:{con}".format(con=con,lot=lot))
@@ -370,7 +371,7 @@ def ok_units_list(update: Update, context: CallbackContext):
     print('ok units list processing')
     ok_list = pd.DataFrame()
     try:
-        cbu_yard_status = pd.read_sql_query("SELECT * FROM cbu_yard_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        cbu_yard_status = pd.read_sql_query("SELECT * FROM cbu_yard_status", DATABASE_URI)
         # remove in repair lots
         cbu_yard_status = cbu_yard_status[np.invert(cbu_yard_status['lot_no'].str.endswith("[In-Repair]"))]
         cbu_yard_status_available = True
@@ -380,7 +381,7 @@ def ok_units_list(update: Update, context: CallbackContext):
     for lot in context.args:
         lot = get_lot_code(lot)
         try:
-            df = pd.read_sql_query("SELECT lot_no, katashiki, vin_no, engine_no, colour  FROM vin_list WHERE lot_no = '{lot}';".format(lot=lot), 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg').iloc[0]
+            df = pd.read_sql_query("SELECT lot_no, katashiki, vin_no, engine_no, colour  FROM vin_list WHERE lot_no = '{lot}';".format(lot=lot), DATABASE_URI).iloc[0]
             ok_list = ok_list.append(df)
             # if cbu_yard_status_available:
             #     # remove lot cbu yard
@@ -425,13 +426,13 @@ ok_units_list_handler = CommandHandler('oul', ok_units_list)
 #pushing lots into the line
 def supply_line(update: Update, context: CallbackContext):
     try:
-        storage_area = pd.read_sql_query("SELECT * FROM skd_storage", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg', index_col='row')
+        storage_area = pd.read_sql_query("SELECT * FROM skd_storage", DATABASE_URI, index_col='row')
         print("database accessed for storage area status")
     except:
         storage_area = pd.DataFrame()
         print("No storage area information in database")
     try:
-        cbu_yard = pd.read_sql_query("SELECT * FROM cbu_yard_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        cbu_yard = pd.read_sql_query("SELECT * FROM cbu_yard_status", DATABASE_URI)
         x = cbu_yard["lot_no"].values
         x = x.tolist()
         print("cbu yard ", x)
@@ -439,7 +440,7 @@ def supply_line(update: Update, context: CallbackContext):
         print("Warning: No data information on cbu yard status")
         x = []
     try:
-        line_data = pd.read_sql_query("SELECT * FROM line_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        line_data = pd.read_sql_query("SELECT * FROM line_status", DATABASE_URI)
         y = line_data["lot_no"].values
         y = y.tolist()
     except:
@@ -494,7 +495,7 @@ supply_line_handler = CommandHandler('push', supply_line)
 #quering for line updates
 def line(update: Update, context: CallbackContext):
     try:
-        line_data = pd.read_sql_query("SELECT * FROM line_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        line_data = pd.read_sql_query("SELECT * FROM line_status", DATABASE_URI)
         y = line_data["lot_no"].values
         y = y.tolist()
         print(y)
@@ -514,7 +515,7 @@ line_handler = CommandHandler('line', line)
 #quering for cbu updates
 def cbu(update: Update, context: CallbackContext):
     try:
-        cbu_yard_status = pd.read_sql_query("SELECT * FROM cbu_yard_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        cbu_yard_status = pd.read_sql_query("SELECT * FROM cbu_yard_status", DATABASE_URI)
         cbu_yard_status = cbu_yard_status[np.invert(cbu_yard_status['lot_no'].str.endswith('[In-Repair]'))]
         y = cbu_yard_status["lot_no"].values
         y = y.tolist()
@@ -534,7 +535,7 @@ cbu_handler = CommandHandler('cbu', cbu)
 #quering for storage lane SKDs
 def lane(update: Update, context: CallbackContext):
     try:
-        storage_area = pd.read_sql_query("SELECT * FROM skd_storage", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg', index_col='row')
+        storage_area = pd.read_sql_query("SELECT * FROM skd_storage", DATABASE_URI, index_col='row')
         storage_area.index.name = ""
     except:
         print("Error: storage area data not available")
@@ -553,9 +554,9 @@ lane_handler = CommandHandler('lane', lane)
 def repair(update: Update, context: CallbackContext):
     lot = ""
     try:
-        line_data = pd.read_sql_query("SELECT * FROM line_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        line_data = pd.read_sql_query("SELECT * FROM line_status", DATABASE_URI)
         temp = line_data['lot_no'].to_list()
-        repair_area_status = pd.read_sql_query("SELECT * FROM repair_area_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        repair_area_status = pd.read_sql_query("SELECT * FROM repair_area_status", DATABASE_URI)
         repair_area_status_available = True
         if not len(repair_area_status.values):
             repair_area_status_available = False
@@ -567,7 +568,7 @@ def repair(update: Update, context: CallbackContext):
         repair_area_status_available = False
     try:
         # query units at non-dispatch area
-        non_dispatch_status = pd.read_sql_query("SELECT * FROM non_dispatch_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        non_dispatch_status = pd.read_sql_query("SELECT * FROM non_dispatch_status", DATABASE_URI)
         non_dispatch_status_available = True
         if not len(non_dispatch_status.values):
             non_dispatch_status_available = False
@@ -627,9 +628,9 @@ def restore(update: Update, context: CallbackContext):
     lot = ""
     repair_area_status_available = True
     try:    
-        line_data = pd.read_sql_query("SELECT * FROM line_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        line_data = pd.read_sql_query("SELECT * FROM line_status", DATABASE_URI)
         temp = line_data['lot_no'].to_list()
-        repair_area_status = pd.read_sql_query("SELECT * FROM repair_area_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        repair_area_status = pd.read_sql_query("SELECT * FROM repair_area_status", DATABASE_URI)
         if not len(repair_area_status.values):
             repair_area_status_available = False
             repair_area_status = pd.DataFrame({"lot_no":[]}) 
@@ -639,7 +640,7 @@ def restore(update: Update, context: CallbackContext):
         repair_area_status = pd.DataFrame({"lot_no":[]}) 
         repair_area_status_available = False
     try:
-        cbu_yard = pd.read_sql_query("SELECT * FROM cbu_yard_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        cbu_yard = pd.read_sql_query("SELECT * FROM cbu_yard_status", DATABASE_URI)
     except:
         print("Caution: No data information on cbu yard status")
         cbu_yard = pd.DataFrame({"lot_no":[]})
@@ -684,8 +685,8 @@ def non_dispatch(update: Update, context: CallbackContext):
     lot = ""
     try:
         # query units at repair
-        repair_area_status = pd.read_sql_query("SELECT * FROM repair_area_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
-        non_dispatch_status = pd.read_sql_query("SELECT * FROM non_dispatch_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        repair_area_status = pd.read_sql_query("SELECT * FROM repair_area_status", DATABASE_URI)
+        non_dispatch_status = pd.read_sql_query("SELECT * FROM non_dispatch_status", DATABASE_URI)
         non_dispatch_status_available = True
         if not len(non_dispatch_status.values):
             non_dispatch_status_available = False
@@ -730,7 +731,7 @@ non_dispatch_handler = CommandHandler('ndu', non_dispatch)
 # Dispatch units from CBU yard
 def dispatch(update: Update, context: CallbackContext):
     try:
-        cbu_yard_status = pd.read_sql_query("SELECT * from cbu_yard_status", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        cbu_yard_status = pd.read_sql_query("SELECT * from cbu_yard_status", DATABASE_URI)
     except:
         cbu_yard_status = pd.DataFrame({'lot':[]})
     try:
@@ -738,7 +739,7 @@ def dispatch(update: Update, context: CallbackContext):
         if not cbu_yard_status.empty:
             for vin in vins:
                 vin = get_vin(vin)
-                df = pd.read_sql_query(f"SELECT vin_no, lot_no FROM vin_list WHERE vin_no LIKE '{vin}' LIMIT 1;", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+                df = pd.read_sql_query(f"SELECT vin_no, lot_no FROM vin_list WHERE vin_no LIKE '{vin}' LIMIT 1;", DATABASE_URI)
                 if not df.empty:
                     vin_no, lot = df.iloc[0].values
                     available_lot = cbu_yard_status[cbu_yard_status['lot_no'].str.startswith(lot)]
@@ -767,13 +768,13 @@ def update_line(update:Update, context:CallbackContext):
     new_lot = get_lot_code(context.args[1])
     print('attempting to update line')
     try:
-        line = pd.read_sql_query("SELECT * FROM line_status;", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        line = pd.read_sql_query("SELECT * FROM line_status;", DATABASE_URI)
         print('successfully accessed line status')
     except:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Line information is currently unavailable")
         return
     try:
-        storage_area = pd.read_sql_query("SELECT * FROM skd_storage;", 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+        storage_area = pd.read_sql_query("SELECT * FROM skd_storage;", DATABASE_URI)
         print('successfully accessed storage area status')
     except:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Attempt to access storage area info was unsuccessful")
@@ -793,7 +794,7 @@ update_line_handler = CommandHandler('upl', update_line)
 # return next lot to line's location
 def next_loc(update:Update, context:CallbackContext):
     # try:
-    next_loc = pd.read_sql_query('Select * from next_lot_loc ', 'postgresql://postgres:Jpn@pg13@localhost:5432/ttmg')
+    next_loc = pd.read_sql_query('Select * from next_lot_loc ', DATABASE_URI)
     next_loc = next_loc.values[0][0]
     context.bot.send_message(chat_id=update.effective_chat.id, text='Next lot Location at {next_loc}'.format(next_loc=next_loc))
     # except:
