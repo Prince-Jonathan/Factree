@@ -411,7 +411,8 @@ def ok_units_list(update: Update, context: CallbackContext):
     ok_list.to_excel(writer, sheet_name='Sheet1', index_label="S/No")
     workbook  = writer.book
     workbook.filename = f
-    workbook.add_vba_project(r'C:\Users\LogisticsUser02\Documents\VIN_import\backend\vbaProject.bin')
+    # workbook.add_vba_project(r'C:\Users\LogisticsUser02\Documents\VIN_import\backend\vbaProject.bin')
+    workbook.add_vba_project(r'vbaProject.bin')
     writer.save()
     # if cbu_yard_status_available:
     #     cbu_yard_status.to_sql("cbu_yard_status", engine, index=False, if_exists='replace')
