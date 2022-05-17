@@ -424,11 +424,11 @@ def ok_units_list(update: Update, context: CallbackContext):
 #implementing ok_units_list handler
 ok_units_list_handler = CommandHandler('oul', ok_units_list)
 
-#receiving lot numbers and returning transport list
+#receiving lot numbers and returning hilux transport list
 def transport_list(update: Update, context: CallbackContext):
     date = datetime.datetime.now()
     print('ok units list processing')
-    ok_list = pd.DataFrame()
+    transport_list = pd.DataFrame()
     try:
         cbu_yard_status = pd.read_sql_query("SELECT * FROM cbu_yard_status", DATABASE_URI)
         # remove in repair lots
@@ -441,7 +441,7 @@ def transport_list(update: Update, context: CallbackContext):
         lot = get_lot_code(lot)
         try:
             df = pd.read_sql_query("SELECT katashiki,lot_no,colour,vin_no,engine_no  FROM vin_list WHERE lot_no = '{lot}';".format(lot=lot), DATABASE_URI).iloc[0]
-            ok_list = ok_list.append(df)
+            transport_list = transport_list.append(df)
             # if cbu_yard_status_available:
             #     # remove lot cbu yard
             #     cbu_yard_status[np.invert(cbu_yard_status['lot_no'].str.startswith(lot)) ]
@@ -450,24 +450,22 @@ def transport_list(update: Update, context: CallbackContext):
             print("Queried lot does not exist")
             context.bot.send_message(chat_id=update.effective_chat.id, text="Lot {lot} is not available 😒".format(lot=lot))
             context.bot.send_message(chat_id="848287261", text="{user} [@{username}] could not access function: {command} ".format(user=str(update["message"]["chat"]["first_name"]), username=str(update["message"]["chat"]["username"]), command=str(update["message"]["text"])))
-    row_count = len(ok_list.index)
-    # ok_list = ok_list.assign(WEIGHT=[2,750]*row_count, Transport Date=[(datetime.date.    today()+datetime.timedelta(days=1)).strftime("%d-%b-%y")]*row_count)
-    ok_list.columns = ok_list.columns.str.replace("_", " ", regex=False)
-    ok_list.columns = ok_list.columns.str.upper()
-    ok_list.index =  list(range(1,len(ok_list.index)+1))
-
+    row_count = len(transport_list.index)
+    transport_list = transport_list.assign(WEIGHT=[2750]*row_count, QTY=[1]*row_count, MSMT=[7]*row_count, Date=[(datetime.date.today()+datetime.timedelta(days=1)).strftime("%A, %d %b, %Y")]*row_count)
+    transport_list.columns = transport_list.columns.str.replace("_", " ", regex=False)
+    transport_list.columns = transport_list.columns.str.upper()
     # file name
     # WITHOUT MACRO
     # f = date.strftime("%y%m%d %b '%y")+" OK Units List.xlsx"
     # 
-    f = date.strftime("%y%m%d %b '%y")+" OK Units List.xlsm"
+    f = date.strftime("%y%m%d %b '%y")+" Hilux Transport to Warehouse.xlsm"
 
     # export to excel file
     # WITHOUT MACRO
-    # ok_list.to_excel(f, index_label="S/No")
+    # transport_list.to_excel(f, index_label="S/No")
     # 
     writer = pd.ExcelWriter("temp.xlsx", engine='xlsxwriter')
-    ok_list.to_excel(writer, sheet_name='Sheet1', index_label="S/No")
+    transport_list.to_excel(writer, sheet_name='Sheet1', index_label="S/No")
     workbook  = writer.book
     workbook.filename = f
     # workbook.add_vba_project(r'C:\Users\LogisticsUser02\Documents\VIN_import\backend\vbaProject.bin')
@@ -481,7 +479,7 @@ def transport_list(update: Update, context: CallbackContext):
     os.remove(f)
 
 #implementing transport_list handler
-transport_list_handler = CommandHandler('oul', transport_list)
+transport_list_handler = CommandHandler('htl', transport_list)
 
 #pushing lots into the line
 def supply_line(update: Update, context: CallbackContext):
