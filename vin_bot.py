@@ -451,7 +451,7 @@ def transport_list(update: Update, context: CallbackContext):
             context.bot.send_message(chat_id=update.effective_chat.id, text="Lot {lot} is not available 😒".format(lot=lot))
             context.bot.send_message(chat_id="848287261", text="{user} [@{username}] could not access function: {command} ".format(user=str(update["message"]["chat"]["first_name"]), username=str(update["message"]["chat"]["username"]), command=str(update["message"]["text"])))
     row_count = len(ok_list.index)
-    ok_list = ok_list.assign(WEIGHT=[2,750]*row_count, Transport Date=[(datetime.date.today()+datetime.timedelta(days=1)).strftime("%d-%b-%y")]*row_count)
+    # ok_list = ok_list.assign(WEIGHT=[2,750]*row_count, Transport Date=[(datetime.date.today()+datetime.timedelta(days=1)).strftime("%d-%b-%y")]*row_count)
     ok_list.columns = ok_list.columns.str.replace("_", " ", regex=False)
     ok_list.columns = ok_list.columns.str.upper()
     ok_list.index =  list(range(1,len(ok_list.index)+1))
