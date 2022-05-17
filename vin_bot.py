@@ -117,9 +117,9 @@ def import_doc(update: Update, context: CallbackContext):
         with open("storage_area_temp.xlsx", 'wb') as f:
             context.bot.get_file(update.message.document).download(out=f)
         # df = pd.read_excel("storage_area_temp.xlsx", index_col=0, skiprows=range(0,3), usecols="A:L")
-        df = pd.read_excel(r"C:\Users\LogisticsUser02\Documents\VIN_import\backend\storage_area_temp.xlsx", sheet_name="SKD Storage", header=2, usecols=['#','A','B','C','D','E','F','G','H','I','J','K'], index_col=0, nrows=5)
+        df = pd.read_excel(r"storage_area_temp.xlsx", sheet_name="SKD Storage", header=2, usecols=['#','A','B','C','D','E','F','G','H','I','J','K'], index_col=0, nrows=5)
         df.index.name = 'row'
-        os.remove(r"C:\Users\LogisticsUser02\Documents\VIN_import\backend\storage_area_temp.xlsx")
+        os.remove(r"storage_area_temp.xlsx")
         try:
             # commit dataframe to sql database
             df.to_sql("skd_storage", engine, if_exists='replace')
