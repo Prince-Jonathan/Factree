@@ -336,8 +336,8 @@ def serial(update: Update, context: CallbackContext):
         try:
             df = pd.read_sql_query("SELECT vin_no,engine_no FROM vin_list WHERE lot_no = \'%s\';"%lot, DATABASE_URI)
             serial = df.iloc[0]['vin_no']+str(df.iloc[0]['engine_no'])
-            clip_board = pd.DataFrame([serial])
-            clip_board.to_clipboard(index=False)
+            # clip_board = pd.DataFrame([serial])
+            # clip_board.to_clipboard(index=False)
             context.bot.send_message(chat_id=update.effective_chat.id, text=lot+": "+serial)
             print("Requested serial of {lot}:{serial}".format(serial=serial,lot=lot))
         except:
