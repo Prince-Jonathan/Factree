@@ -451,7 +451,7 @@ def transport_list(update: Update, context: CallbackContext):
             context.bot.send_message(chat_id=update.effective_chat.id, text="Lot {lot} is not available 😒".format(lot=lot))
             context.bot.send_message(chat_id="848287261", text="{user} [@{username}] could not access function: {command} ".format(user=str(update["message"]["chat"]["first_name"]), username=str(update["message"]["chat"]["username"]), command=str(update["message"]["text"])))
     row_count = len(ok_list.index)
-    # ok_list = ok_list.assign(WEIGHT=[2,750]*row_count, Transport Date=[(datetime.date.today()+datetime.timedelta(days=1)).strftime("%d-%b-%y")]*row_count)
+    # ok_list = ok_list.assign(WEIGHT=[2,750]*row_count, Transport Date=[(datetime.date.    today()+datetime.timedelta(days=1)).strftime("%d-%b-%y")]*row_count)
     ok_list.columns = ok_list.columns.str.replace("_", " ", regex=False)
     ok_list.columns = ok_list.columns.str.upper()
     ok_list.index =  list(range(1,len(ok_list.index)+1))
@@ -529,7 +529,6 @@ def supply_line(update: Update, context: CallbackContext):
             new_col = col[(col.index(curr_col)+1)%len(col)] if curr_col == 5  else curr_col
             next_lot_loc = new_col+str(next_ind)
             next_lot_loc = pd.DataFrame({"next":[next_lot_loc]})
-            print(next_lot_loc)
             next_lot_loc.to_sql('next_lot_loc', engine, index=False, if_exists='replace')
         # remove pushed lot from storage area
         storage_area = storage_area[np.invert(storage_area==lot)].fillna(np.nan)

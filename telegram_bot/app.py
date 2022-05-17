@@ -29,7 +29,7 @@ APP.config['SQLALCHEMY_ECHO'] = True
 #initialising database with flask object
 DB = SQLAlchemy(APP)
 
-engine = DB.create_engine('postgresql://postgres:Jpn@pg13@localhost:5432/ttmg', engine_opts={
+engine = DB.create_engine('postgres://rxxavqzelrynsk:8aec395e670af85437c5c603f01b4c8f608ed7eb2c86e568d2864e53cb1dc3a8@ec2-44-196-223-128.compute-1.amazonaws.com:5432/d96dk3m2laba85', engine_opts={
     'pool_recycle': 120,
     'pool_pre_ping': True
     })
