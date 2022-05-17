@@ -424,6 +424,65 @@ def ok_units_list(update: Update, context: CallbackContext):
 #implementing ok_units_list handler
 ok_units_list_handler = CommandHandler('oul', ok_units_list)
 
+#receiving lot numbers and returning transport list
+def transport_list(update: Update, context: CallbackContext):
+    date = datetime.datetime.now()
+    print('ok units list processing')
+    ok_list = pd.DataFrame()
+    try:
+        cbu_yard_status = pd.read_sql_query("SELECT * FROM cbu_yard_status", DATABASE_URI)
+        # remove in repair lots
+        cbu_yard_status = cbu_yard_status[np.invert(cbu_yard_status['lot_no'].str.endswith("[In-Repair]"))]
+        cbu_yard_status_available = True
+    except:
+        print('Error while trying to access cbu_yard_status')
+        cbu_yard_status_available = False
+    for lot in context.args:
+        lot = get_lot_code(lot)
+        try:
+            df = pd.read_sql_query("SELECT katashiki,lot_no,colour,vin_no,engine_no  FROM vin_list WHERE lot_no = '{lot}';".format(lot=lot), DATABASE_URI).iloc[0]
+            ok_list = ok_list.append(df)
+            # if cbu_yard_status_available:
+            #     # remove lot cbu yard
+            #     cbu_yard_status[np.invert(cbu_yard_status['lot_no'].str.startswith(lot)) ]
+            # print("Requested ok_units list including {lot}".format(lot=lot))
+        except:
+            print("Queried lot does not exist")
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Lot {lot} is not available 😒".format(lot=lot))
+            context.bot.send_message(chat_id="848287261", text="{user} [@{username}] could not access function: {command} ".format(user=str(update["message"]["chat"]["first_name"]), username=str(update["message"]["chat"]["username"]), command=str(update["message"]["text"])))
+    row_count = len(ok_list.index)
+    ok_list = ok_list.assign(WEIGHT=[2,750]*row_count, Transport Date=[(datetime.date.today()+datetime.timedelta(days=1)).strftime("%d-%b-%y")]*row_count)
+    ok_list.columns = ok_list.columns.str.replace("_", " ", regex=False)
+    ok_list.columns = ok_list.columns.str.upper()
+    ok_list.index =  list(range(1,len(ok_list.index)+1))
+
+    # file name
+    # WITHOUT MACRO
+    # f = date.strftime("%y%m%d %b '%y")+" OK Units List.xlsx"
+    # 
+    f = date.strftime("%y%m%d %b '%y")+" OK Units List.xlsm"
+
+    # export to excel file
+    # WITHOUT MACRO
+    # ok_list.to_excel(f, index_label="S/No")
+    # 
+    writer = pd.ExcelWriter("temp.xlsx", engine='xlsxwriter')
+    ok_list.to_excel(writer, sheet_name='Sheet1', index_label="S/No")
+    workbook  = writer.book
+    workbook.filename = f
+    # workbook.add_vba_project(r'C:\Users\LogisticsUser02\Documents\VIN_import\backend\vbaProject.bin')
+    workbook.add_vba_project(r'vbaProject.bin')
+    writer.save()
+    # if cbu_yard_status_available:
+    #     cbu_yard_status.to_sql("cbu_yard_status", engine, index=False, if_exists='replace')
+    with open(f, 'rb') as f:
+        context.bot.send_document(update.effective_chat.id, f, caption="Here is your draft📃")
+        context.bot.send_message(chat_id="848287261", text="{user} successfully accessed function:\n {command} ".format(user=str(update["message"]["chat"]["first_name"]), command=str(update["message"]["text"])))
+    os.remove(f)
+
+#implementing transport_list handler
+transport_list_handler = CommandHandler('oul', transport_list)
+
 #pushing lots into the line
 def supply_line(update: Update, context: CallbackContext):
     try:
@@ -470,6 +529,7 @@ def supply_line(update: Update, context: CallbackContext):
             new_col = col[(col.index(curr_col)+1)%len(col)] if curr_col == 5  else curr_col
             next_lot_loc = new_col+str(next_ind)
             next_lot_loc = pd.DataFrame({"next":[next_lot_loc]})
+            print(next_lot_loc)
             next_lot_loc.to_sql('next_lot_loc', engine, index=False, if_exists='replace')
         # remove pushed lot from storage area
         storage_area = storage_area[np.invert(storage_area==lot)].fillna(np.nan)
@@ -840,6 +900,7 @@ def main():
     dispatcher.add_handler(serial_handler)
     dispatcher.add_handler(con_handler)
     dispatcher.add_handler(ok_units_list_handler)
+    dispatcher.add_handler(transport_list_handler)
     dispatcher.add_handler(import_doc_handler)
     dispatcher.add_handler(supply_line_handler)
     dispatcher.add_handler(line_handler)
