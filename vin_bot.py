@@ -458,7 +458,7 @@ def transport_list(update: Update, context: CallbackContext):
     # WITHOUT MACRO
     # f = date.strftime("%y%m%d %b '%y")+" OK Units List.xlsx"
     # 
-    f = date.strftime("%y%m%d %b '%y")+" Hilux Transport to Warehouse.xlsm"
+    f = date.strftime("%y%m%d")+" Hilux Transport to Warehouse.xlsm"
 
     # export to excel file
     # WITHOUT MACRO
