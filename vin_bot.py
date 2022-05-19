@@ -427,7 +427,7 @@ ok_units_list_handler = CommandHandler('oul', ok_units_list)
 #receiving lot numbers and returning hilux transport list
 def transport_list(update: Update, context: CallbackContext):
     date = datetime.datetime.now()
-    print('ok units list processing')
+    print('transport list processing')
     transport_list = pd.DataFrame()
     try:
         cbu_yard_status = pd.read_sql_query("SELECT * FROM cbu_yard_status", DATABASE_URI)
@@ -437,46 +437,49 @@ def transport_list(update: Update, context: CallbackContext):
     except:
         print('Error while trying to access cbu_yard_status')
         cbu_yard_status_available = False
-    for lot in context.args:
-        lot = get_lot_code(lot)
-        try:
-            df = pd.read_sql_query("SELECT katashiki,lot_no,colour,vin_no,engine_no  FROM vin_list WHERE lot_no = '{lot}';".format(lot=lot), DATABASE_URI).iloc[0]
-            transport_list = transport_list.append(df)
-            # if cbu_yard_status_available:
-            #     # remove lot cbu yard
-            #     cbu_yard_status[np.invert(cbu_yard_status['lot_no'].str.startswith(lot)) ]
-            # print("Requested ok_units list including {lot}".format(lot=lot))
-        except:
-            print("Queried lot does not exist")
-            context.bot.send_message(chat_id=update.effective_chat.id, text="Lot {lot} is not available 😒".format(lot=lot))
-            context.bot.send_message(chat_id="848287261", text="{user} [@{username}] could not access function: {command} ".format(user=str(update["message"]["chat"]["first_name"]), username=str(update["message"]["chat"]["username"]), command=str(update["message"]["text"])))
-    row_count = len(transport_list.index)
-    transport_list = transport_list.assign(WEIGHT=[2750]*row_count, QTY=[1]*row_count, MSMT=[7]*row_count, Date=[(datetime.date.today()+datetime.timedelta(days=1)).strftime("%A, %d %b, %Y")]*row_count)
-    transport_list.columns = transport_list.columns.str.replace("_", " ", regex=False)
-    transport_list.columns = transport_list.columns.str.upper()
-    # file name
-    # WITHOUT MACRO
-    # f = date.strftime("%y%m%d %b '%y")+" OK Units List.xlsx"
-    # 
-    f = date.strftime("%y%m%d")+" Hilux Transport to Warehouse.xlsm"
+    if len(context.args) !=0:
+        for vin in context.args:
+            vin = get_vin(vin)
+            try:
+                df = pd.read_sql_query(f"SELECT katashiki,lot_no,colour,vin_no,engine_no  FROM vin_list WHERE vin_no LIKE '{vin}' LIMIT 1;", DATABASE_URI)
+                transport_list = transport_list.append(df)
+                # if cbu_yard_status_available:
+                #     # remove lot cbu yard
+                #     cbu_yard_status[np.invert(cbu_yard_status['lot_no'].str.startswith(lot)) ]
+                # print("Requested ok_units list including {lot}".format(lot=lot))
+            except:
+                print("Queried lot does not exist")
+                context.bot.send_message(chat_id=update.effective_chat.id, text=f" {vin} is not available 😒")
+                context.bot.send_message(chat_id="848287261", text="{user} [@{username}] could not access function: {command} ".format(user=str(update["message"]["chat"]["first_name"]), username=str(update["message"]["chat"]["username"]), command=str(update["message"]["text"])))
+        row_count = len(transport_list.index)
+        transport_list = transport_list.assign(WEIGHT=[2750]*row_count, QTY=[1]*row_count, MSMT=[7]*row_count, Date=[(datetime.date.today()+datetime.timedelta(days=1)).strftime("%A, %d %b, %Y")]*row_count)
+        transport_list.columns = transport_list.columns.str.replace("_", " ", regex=False)
+        transport_list.columns = transport_list.columns.str.upper()
+        # file name
+        # WITHOUT MACRO
+        # f = date.strftime("%y%m%d %b '%y")+" OK Units List.xlsx"
+        # 
+        f = date.strftime("%y%m%d")+" Hilux Transport to Warehouse.xlsm"
 
-    # export to excel file
-    # WITHOUT MACRO
-    # transport_list.to_excel(f, index_label="S/No")
-    # 
-    writer = pd.ExcelWriter("temp.xlsx", engine='xlsxwriter')
-    transport_list.to_excel(writer, sheet_name='Sheet1', index_label="S/No")
-    workbook  = writer.book
-    workbook.filename = f
-    # workbook.add_vba_project(r'C:\Users\LogisticsUser02\Documents\VIN_import\backend\vbaProject.bin')
-    workbook.add_vba_project(r'vbaProject.bin')
-    writer.save()
-    # if cbu_yard_status_available:
-    #     cbu_yard_status.to_sql("cbu_yard_status", engine, index=False, if_exists='replace')
-    with open(f, 'rb') as f:
-        context.bot.send_document(update.effective_chat.id, f, caption="Here is your draft📃")
-        context.bot.send_message(chat_id="848287261", text="{user} successfully accessed function:\n {command} ".format(user=str(update["message"]["chat"]["first_name"]), command=str(update["message"]["text"])))
-    os.remove(f)
+        # export to excel file
+        # WITHOUT MACRO
+        # transport_list.to_excel(f, index_label="S/No")
+        # 
+        writer = pd.ExcelWriter("temp.xlsx", engine='xlsxwriter')
+        transport_list.to_excel(writer, sheet_name='Sheet1', index_label="S/No")
+        workbook  = writer.book
+        workbook.filename = f
+        # workbook.add_vba_project(r'C:\Users\LogisticsUser02\Documents\VIN_import\backend\vbaProject.bin')
+        workbook.add_vba_project(r'vbaProject.bin')
+        writer.save()
+        # if cbu_yard_status_available:
+        #     cbu_yard_status.to_sql("cbu_yard_status", engine, index=False, if_exists='replace')
+        with open(f, 'rb') as f:
+            context.bot.send_document(update.effective_chat.id, f, caption="Here is your draft📃")
+            context.bot.send_message(chat_id="848287261", text="{user} successfully accessed function:\n {command} ".format(user=str(update["message"]["chat"]["first_name"]), command=str(update["message"]["text"])))
+        os.remove(f)
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Please specify VINs")
 
 #implementing transport_list handler
 transport_list_handler = CommandHandler('htl', transport_list)
