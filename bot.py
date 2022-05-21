@@ -180,29 +180,34 @@ def import_doc(update: Update, context: CallbackContext):
         with open("control_sheet.xlsx", 'wb') as f:
             context.bot.get_file(update.message.document).download(out=f)
         # cleaning data:start
-        control_sheet = pd.read_excel(r"control_sheet.xlsx",usecols=[2,3,4,6,8,9,10,11,13,16,17],na_values='á');
-        control_sheet.columns = control_sheet.iloc[1].str.replace('\n',' ',regex=False)
-        control_sheet.dropna(inplace=True,how='all')
-        control_sheet.drop(index=1,inplace=True)
-        control_sheet[['PART NAME','REOCCURENCE']]
-        control_sheet[['PART NO','QTY']] = control_sheet['PART NO. (Q\'TY)'].str.split('\n', expand=True)[[0,1]]
-        control_sheet.drop(columns='PART NO. (Q\'TY)', inplace=True)
-        control_sheet[['PART NO', 'QTY']]
-        control_sheet.columns = (control_sheet.columns
-                        .str.replace(' ','_', regex=False)
-                        .str.replace('BACKUP(B)/_SHORT(S)/_MISSING(M)/_WRONG(W)/_QUALITY(Q)','status',regex=False)
-                        .str.replace('ER/SMQR','erb',regex=False)
-                        .str.replace('CPO/SPO_/RWO','order_no',regex=False)
-                        .str.replace('COPED/ER(C)?_YES(Y)/_NO(N)','coped',regex=False)
-                        .str.replace('(','',regex=False)
-                        .str.replace(')','', regex=False)
-                        .str.lower()
-                        )
-        control_sheet.fillna(method='ffill', inplace=True)
-        control_sheet['qty'] = control_sheet['qty'].str.replace(r"\(*\)","",regex=True)
-        control_sheet['qty'] = control_sheet['qty'].str.replace(r"(","",regex=True)
-        # cleaning data:end
-        control_sheet.to_sql("control_sheet", engine, if_exists='replace')
+        try:
+            control_sheet = pd.read_excel(r"control_sheet.xlsx",usecols=[2,3,4,6,8,9,10,11,13,16,17],na_values='á');
+            control_sheet.columns = control_sheet.iloc[1].str.replace('\n',' ',regex=False)
+            control_sheet.dropna(inplace=True,how='all')
+            control_sheet.drop(index=1,inplace=True)
+            control_sheet[['PART NAME','REOCCURENCE']]
+            control_sheet[['PART NO','QTY']] = control_sheet['PART NO. (Q\'TY)'].str.split('\n', expand=True)[[0,1]]
+            control_sheet.drop(columns='PART NO. (Q\'TY)', inplace=True)
+            control_sheet[['PART NO', 'QTY']]
+            control_sheet.columns = (control_sheet.columns
+                            .str.replace(' ','_', regex=False)
+                            .str.replace('BACKUP(B)/_SHORT(S)/_MISSING(M)/_WRONG(W)/_QUALITY(Q)','status',regex=False)
+                            .str.replace('ER/SMQR','erb',regex=False)
+                            .str.replace('CPO/SPO_/RWO','order_no',regex=False)
+                            .str.replace('COPED/ER(C)?_YES(Y)/_NO(N)','coped',regex=False)
+                            .str.replace('(','',regex=False)
+                            .str.replace(')','', regex=False)
+                            .str.lower()
+                            )
+            control_sheet.fillna(method='ffill', inplace=True)
+            control_sheet['qty'] = control_sheet['qty'].str.replace(r"\(*\)","",regex=True)
+            control_sheet['qty'] = control_sheet['qty'].str.replace(r"(","",regex=True)
+            # cleaning data:end
+            control_sheet.to_sql("control_sheet", engine, if_exists='replace')
+            context.bot.send_message(chat_id=update.effective_chat.id, reply_to_message_id=update.message.message_id, text="alright...done☺️👍")
+        except:
+            print("Error occured while trying to clean and upload control sheet")
+            send_error_telegram(update, context,"Cannot update control sheet for some reason😒")
 
 
 #implementing import_doc handler
