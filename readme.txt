@@ -1,7 +1,5 @@
-Flask-migrate:
-	$ flask db init
-	$ flask db migrate -m "Initial migration."
-	$ flask db upgrade
+running application:
+	py bot.py
 
 Adding macros to excel file:
 	extract vbaProject.bin:

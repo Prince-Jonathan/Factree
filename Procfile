@@ -1,1 +1,1 @@
-web: python3 vin_bot.py
+web: python3 bot.py
