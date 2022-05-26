@@ -32,5 +32,5 @@ engine = DB.create_engine('postgres://rxxavqzelrynsk:8aec395e670af85437c5c603f01
     })
 
 @app.route('/')
-def index:
+def index():
     return {"success":True}
