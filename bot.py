@@ -10,6 +10,7 @@ import numpy as np
 import tabula
 from telegram_bot.app import DATABASE_URI, engine, APP
 import datetime
+from waitress import serve
 from telegram_bot.scripts import get_lot_code, get_vin, get_storage_loc, send_error_telegram
 
 PORT = int(os.environ.get('PORT', 443))
