@@ -32,6 +32,28 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+#frontend dependencies
+/factree/node_modules
+factree/.pnp
+/factree/.pnp.js
+
+# testing
+/factree/coverage
+
+# production
+/factree/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 
 # Installer logs
 pip-log.txt

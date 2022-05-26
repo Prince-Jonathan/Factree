@@ -8,13 +8,13 @@ import logging
 import pandas as pd
 import numpy as np
 import tabula
-from telegram_bot.app import engine
+from telegram_bot.app import DATABASE_URI, engine
 import datetime
 from telegram_bot.scripts import get_lot_code, get_vin, get_storage_loc, send_error_telegram
 
 PORT = int(os.environ.get('PORT', 443))
 TOKEN = '5105572453:AAGjKUhrM_pKVY-e6ghoWhFWIRo4-Db4vxc'
-DATABASE_URI = 'postgres://rxxavqzelrynsk:8aec395e670af85437c5c603f01b4c8f608ed7eb2c86e568d2864e53cb1dc3a8@ec2-44-196-223-128.compute-1.amazonaws.com:5432/d96dk3m2laba85'
+
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -203,7 +203,7 @@ def import_doc(update: Update, context: CallbackContext):
             control_sheet['qty'] = control_sheet['qty'].str.replace(r"\(*\)","",regex=True)
             control_sheet['qty'] = control_sheet['qty'].str.replace(r"(","",regex=True)
             # cleaning data:end
-            control_sheet.to_sql("control_sheet", engine, if_exists='replace')
+            control_sheet.to_sql("control_sheet", engine, if_exists='replace', index=False)
             context.bot.send_message(chat_id=update.effective_chat.id, reply_to_message_id=update.message.message_id, text="alright...done☺️👍")
         except:
             print("Error occured while trying to clean and upload control sheet")
@@ -858,9 +858,6 @@ dispatch_handler = CommandHandler('dis', dispatch)
 
 # update line information
 def update_line(update:Update, context:CallbackContext):
-    station = context.args[0].upper()
-    new_lot = get_lot_code(context.args[1])
-    print('attempting to update line')
     try:
         line = pd.read_sql_query("SELECT * FROM line_status;", DATABASE_URI)
         print('successfully accessed line status')
@@ -873,12 +870,16 @@ def update_line(update:Update, context:CallbackContext):
     except:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Attempt to access storage area info was unsuccessful")
         return
-    line.iloc[station_names.index(station)]= new_lot
+    for update in context.args:
+        station, new_lot = update.split('.')
+        new_lot = new_lot.upper()
+        print('attempting to update line')
+        line.iloc[station_names.index(station)]= new_lot
+        # ****refactor code set for deleting lot if it is below*******
+        storage_area[np.invert(storage_area==new_lot)].fillna(np.nan)
+        context.bot.send_message(chat_id=update.effective_chat.id, text='Line station:{station} now has:{new_lot}'.format(station=station, new_lot=new_lot))
     line.to_sql('line_status', engine, index=False, if_exists='replace')
-    # ****refactor code set for deleting lot if it is below*******
-    storage_area[np.invert(storage_area==new_lot)].fillna(np.nan)
     storage_area.to_sql('skd_storage', engine, if_exists='replace')
-    context.bot.send_message(chat_id=update.effective_chat.id, text='Line station:{station} now has:{new_lot}'.format(station=station, new_lot=new_lot))
     print('Line update: successful')
 
 
