@@ -21,6 +21,7 @@ APP.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 # consumes lot of memory: set to false
 APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 APP.config['SQLALCHEMY_ECHO'] = True
+app = APP
 
 # Session(APP)
 #initialising database with flask object
