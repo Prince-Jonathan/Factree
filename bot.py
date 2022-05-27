@@ -960,4 +960,5 @@ def main():
 
 if __name__=='__main__':
     main()
-    serve(APP, host='0.0.0.0', port=int(PORT))
+    APP.run(host="0.0.0.0", port=int(PORT), debug=False)
+    # serve(APP, host='0.0.0.0', port=int(PORT))
