@@ -13,8 +13,8 @@ import datetime
 from waitress import serve
 from telegram_bot.scripts import get_lot_code, get_vin, get_storage_loc, send_error_telegram
 
-PORT = int(os.environ.get('PORT', 443))
-TOKEN = '5105572453:AAGjKUhrM_pKVY-e6ghoWhFWIRo4-Db4vxc'
+# PORT = int(os.environ.get('PORT', 443))
+# TOKEN = '5105572453:AAGjKUhrM_pKVY-e6ghoWhFWIRo4-Db4vxc'
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
