@@ -14,7 +14,7 @@ from waitress import serve
 from telegram_bot.scripts import get_lot_code, get_vin, get_storage_loc, send_error_telegram
 
 PORT = int(os.environ.get('PORT', 443))
-TOKEN = '5105572453:AAGjKUhrM_pKVY-e6ghoWhFWIRo4-Db4vxc'
+TOKEN = os.environ.get('TOKEN')
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
@@ -908,6 +908,8 @@ def joke(update: Update, context: CallbackContext):
         context.bot.send_message(chat_id=update.effective_chat.id, reply_to_message_id=int(update["message"]["message_id"]), text="Sure...safety first👊")
     if  "LOL" in update.message.text.upper():
         context.bot.send_message(chat_id=update.effective_chat.id, reply_to_message_id=int(update["message"]["message_id"]), text="😂")
+    if  "😂" in update.message.text.upper():
+        context.bot.send_message(chat_id=update.effective_chat.id, reply_to_message_id=int(update["message"]["message_id"]), text="😊")
     # if  "LOL" in update.message.text.upper():
     #     context.bot.send_message(chat_id=update.effective_chat.id, reply_to_message_id=int(update["message"]["message_id"]), text="😂")
 
