@@ -29,7 +29,7 @@ cbu_yard_names = ['Lot1','Lot2','Lot3','Lot4','Lot5', 'Lot6','Lot7','Lot8','Lot9
 #start command function
 def start(update: Update, context: CallbackContext):
     print(update)
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Let's start...Safety first☝️!")
+    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Let's start...Safety first☝️☝️!")
 
 #start command handler
 start_handler = CommandHandler('start', start)
