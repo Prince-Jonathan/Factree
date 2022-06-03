@@ -40,7 +40,8 @@ def help_func(update: Update, context: CallbackContext):
     context.bot.send_message(
         chat_id=update.effective_chat.id, 
         text='''
-    Alright, I have the following commands for your utility:
+    Alright, I have the following commands for your utility
+
 Commands:
 /vin - returns VIN of lot specified. [eg. /vin aa1]
 /lot - returns lot number for last 3~25 characters of VIN specified. [eg. /lot 85149]
@@ -53,7 +54,21 @@ Commands:
 /oul - returns OK Units list of lots specified (Output: Excel file) [eg. /oul aa1 AA2]
 /htl - returns dispatch list of VINs specified (Output: Excel file) [eg. /htl 856541 75466]
 /push -push next lot to line [eg. /push aa1]
-    
+/line - returns line status information [eg. /line]
+/cbu - returns lots of units at CBU Yard [eg. /cbu]
+/lane - returns lots available at specified storage area lanes [eg. /lane a ]
+/rep -  returns lots at repair area [eg. /rep]
+/res - restores lot from repair to line [eg. /res aa1]
+/ndu - returns list of non-dispatchable units [eg. /ndu]
+/dis - dispatches units from CBU Yard to warehouse [eg. /dis aa1]
+/upl - updates line station with specified lot number [eg. /upl t1.aa2]
+/nxt - returns location of next line to be unpacked from storage area [eg. /nxt]
+
+
+Data Importation:
+vin - caption excel file with VIN list as VIN to import VIN lists.
+storage area - caption excel file with storage area condition as storage area to import storage area updates.
+seq - caption excel file with VIN list as seq to generate container receiving sequence according to FIFO.
         '''
         )
 
@@ -898,6 +913,7 @@ def update_line(update:Update, context:CallbackContext):
         return
     for update in context.args:
         station, new_lot = update.split('.')
+        station = station.upper()
         new_lot = new_lot.upper()
         print('attempting to update line')
         line.iloc[station_names.index(station)]= new_lot
