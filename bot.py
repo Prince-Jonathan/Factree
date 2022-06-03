@@ -43,6 +43,15 @@ def help_func(update: Update, context: CallbackContext):
     Alright, I have the following commands for your utility:
     Commands:
         /vin - returns VIN of lot specified. [eg. /vin AA1]
+        /lot - returns lot number of last 3~25 characters of VIN specified. [eg. /lot 85149]
+        /loc - returns location of lot specified in plant [eg. /loc AA1]
+        /col - returns colour of lot specified [eg. /col AA1]
+        /kat - returns katashiki of lot specified [eg. /kat AA1]
+        /eng - returns engine number of lot specified [eg. /eng AA1]
+        /ser - returns serial number of lot specified (a SAGE application) [eg. /ser AA1]
+        /con - returns container number for lot arrival [eg. /con AA1]
+        
+
         '''
         )
 
