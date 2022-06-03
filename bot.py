@@ -917,14 +917,14 @@ def joke(update: Update, context: CallbackContext):
 joke_handler = MessageHandler(Filters.text, joke)
 
 # implementing help command
-def help(update:Update, context:CallbackContext):
+def help_func(update:Update, context:CallbackContext):
     context.bot.send_message(chat_id=update.effective_chat.id, 
                                 text='''
                                         Testing help command 
                                      ''')
 
 # implement help command handler
-help_handler = CommandHandler('help',help)
+help_handler = CommandHandler('help',help_func)
 
 #implementing default (unknown)
 def unknown(update: Update, context: CallbackContext):
