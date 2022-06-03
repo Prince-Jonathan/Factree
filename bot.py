@@ -918,10 +918,11 @@ joke_handler = MessageHandler(Filters.text, joke)
 
 # implementing help command
 def help_func(update: Update, context: CallbackContext):
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Let's start...Safety first☝️!")
+    print(update)
+    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Let's help...Safety first☝️!")
 
-# implement help command handler
-help_handler = CommandHandler('help',help_func)
+#help command handler
+help_handler = CommandHandler('help', help_func)
 
 #implementing default (unknown)
 def unknown(update: Update, context: CallbackContext):
