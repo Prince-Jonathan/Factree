@@ -922,7 +922,7 @@ def help_func(update: Update, context: CallbackContext):
     context.bot.send_message(chat_id=update.effective_chat.id, text=f"Let's help...Safety first☝️!")
 
 #help command handler
-help_handler = CommandHandler('help', help_func)
+help_handler = CommandHandler('asp', help_func)
 
 #implementing default (unknown)
 def unknown(update: Update, context: CallbackContext):
