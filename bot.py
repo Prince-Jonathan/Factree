@@ -39,8 +39,9 @@ def help_func(update: Update, context: CallbackContext):
     print(update)
     context.bot.send_message(
         chat_id=update.effective_chat.id, 
-        text='''TTMG Bot has the following commands for your utility:
-        Commands:
+        text='''
+    Alright, I have the following commands for your utility:
+    Commands:
         /vin - returns VIN of lot specified. [eg. /vin AA1]
         '''
         )
