@@ -64,7 +64,6 @@ Commands:
 /upl - updates line station with specified lot number [eg. /upl t1.aa2]
 /nxt - returns location of next line to be unpacked from storage area [eg. /nxt]
 
-
 Data Importation:
 vin - caption excel file with VIN list as VIN to import VIN lists.
 storage area - caption excel file with storage area condition as storage area to import storage area updates.
