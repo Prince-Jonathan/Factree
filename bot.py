@@ -41,16 +41,18 @@ def help_func(update: Update, context: CallbackContext):
         chat_id=update.effective_chat.id, 
         text='''
     Alright, I have the following commands for your utility:
-    Commands:
+    **Commands**:
         /vin - returns VIN of lot specified. [eg. /vin AA1]
-        /lot - returns lot number of last 3~25 characters of VIN specified. [eg. /lot 85149]
+        /lot - returns lot number for last 3~25 characters of VIN specified. [eg. /lot 85149]
         /loc - returns location of lot specified in plant [eg. /loc AA1]
         /col - returns colour of lot specified [eg. /col AA1]
         /kat - returns katashiki of lot specified [eg. /kat AA1]
         /eng - returns engine number of lot specified [eg. /eng AA1]
         /ser - returns serial number of lot specified (a SAGE application) [eg. /ser AA1]
         /con - returns container number for lot arrival [eg. /con AA1]
-        
+        /oul - returns OK Units list of lots specified (Output: Excel file) [eg. /oul AA1 AA2]
+        /htl - returns dispatch list of VINs specified (Output: Excel file) [eg. /htl 856541 75466]
+        /push -push next lot to line [eg.]
 
         '''
         )
