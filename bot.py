@@ -935,6 +935,7 @@ def error(update:Update, context:CallbackContext):
 
 def main():
     dispatcher.add_handler(start_handler)
+    dispatcher.add_handler(help_func_handler)
     dispatcher.add_handler(vin_handler)
     dispatcher.add_handler(lot_handler)
     dispatcher.add_handler(loc_handler)
@@ -957,7 +958,6 @@ def main():
     dispatcher.add_handler(update_line_handler)
     dispatcher.add_handler(next_loc_handler)
     dispatcher.add_handler(joke_handler)
-    dispatcher.add_handler(help_func_handler)
     dispatcher.add_handler(unknown_handler)
     dispatcher.add_error_handler(error)
 
