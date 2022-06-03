@@ -1,6 +1,7 @@
 '''
 This script sets up flask and configures its working with sqlalchemy
 '''
+import os
 from flask import Flask, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
