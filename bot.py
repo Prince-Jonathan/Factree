@@ -916,6 +916,16 @@ def joke(update: Update, context: CallbackContext):
 #implementing unknown handler
 joke_handler = MessageHandler(Filters.text, joke)
 
+# implementing help command
+def help(update:Update, context:CallbackContext):
+    context.bot.send_message(chat_id=update.effective_chat.id, 
+                                text='''
+                                        Testing help command 
+                                     ''')
+
+# implement help command handler
+help_handler = CommandHandler('help',help)
+
 #implementing default (unknown)
 def unknown(update: Update, context: CallbackContext):
     context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I'm not sure what you need 🤔...")
@@ -950,6 +960,7 @@ def main():
     dispatcher.add_handler(update_line_handler)
     dispatcher.add_handler(next_loc_handler)
     dispatcher.add_handler(joke_handler)
+    dispatcher.add_handler(help_handler)
     dispatcher.add_handler(unknown_handler)
     dispatcher.add_error_handler(error)
 
