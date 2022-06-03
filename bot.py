@@ -37,7 +37,13 @@ start_handler = CommandHandler('start', start)
 #help command function
 def help_func(update: Update, context: CallbackContext):
     print(update)
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Let's help...Safety first☝️☝!")
+    context.bot.send_message(
+        chat_id=update.effective_chat.id, 
+        text='''TTMG Bot has the following commands for your utility:
+        Commands:
+        /vin - returns VIN of lot specified. [eg. /vin AA1]
+        '''
+        )
 
 #start command handler
 help_func_handler = CommandHandler('help', help_func)
