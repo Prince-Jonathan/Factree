@@ -28,7 +28,7 @@ app = APP
 #initialising database with flask object
 DB = SQLAlchemy(APP)
 
-engine = DB.create_engine(os.get('DATABASE_URL'), engine_opts={
+engine = DB.create_engine(os.environ.get('DATABASE_URL'), engine_opts={
     'pool_recycle': 120,
     'pool_pre_ping': True
     })
