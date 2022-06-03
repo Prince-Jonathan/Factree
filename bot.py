@@ -917,11 +917,8 @@ def joke(update: Update, context: CallbackContext):
 joke_handler = MessageHandler(Filters.text, joke)
 
 # implementing help command
-def help_func(update:Update, context:CallbackContext):
-    context.bot.send_message(chat_id=update.effective_chat.id, 
-                                text='''
-                                        Testing help command 
-                                     ''')
+def help_func(update: Update, context: CallbackContext):
+    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Let's start...Safety first☝️!")
 
 # implement help command handler
 help_handler = CommandHandler('help',help_func)
@@ -973,5 +970,5 @@ def main():
 
 if __name__=='__main__':
     main()
-    APP.run(host="0.0.0.0", port=int(PORT), debug=False)
+    APP.run(host="0.0.0.0", port=8443, debug=False)
     # serve(APP, host='0.0.0.0', port=int(PORT))
