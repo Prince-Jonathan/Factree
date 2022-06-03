@@ -34,13 +34,13 @@ def start(update: Update, context: CallbackContext):
 #start command handler
 start_handler = CommandHandler('start', start)
 
-#start command function
+#help command function
 def help_func(update: Update, context: CallbackContext):
     print(update)
     context.bot.send_message(chat_id=update.effective_chat.id, text=f"Let's help...Safety first☝️☝!")
 
 #start command handler
-help_func = CommandHandler('help', help_func)
+help_func_handler = CommandHandler('help', help_func)
 
 #document import function
 def import_doc(update: Update, context: CallbackContext):
@@ -957,7 +957,7 @@ def main():
     dispatcher.add_handler(update_line_handler)
     dispatcher.add_handler(next_loc_handler)
     dispatcher.add_handler(joke_handler)
-    dispatcher.add_handler(help_handler)
+    dispatcher.add_handler(help_func_handler)
     dispatcher.add_handler(unknown_handler)
     dispatcher.add_error_handler(error)
 
