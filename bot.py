@@ -29,11 +29,18 @@ cbu_yard_names = ['Lot1','Lot2','Lot3','Lot4','Lot5', 'Lot6','Lot7','Lot8','Lot9
 #start command function
 def start(update: Update, context: CallbackContext):
     print(update)
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Let's start...Safety first☝️☝️!")
+    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Let's start...Safety first☝️☝!")
 
 #start command handler
 start_handler = CommandHandler('start', start)
 
+#start command function
+def help_func(update: Update, context: CallbackContext):
+    print(update)
+    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Let's help...Safety first☝️☝!")
+
+#start command handler
+help_func = CommandHandler('help', help_func)
 
 #document import function
 def import_doc(update: Update, context: CallbackContext):
@@ -915,14 +922,6 @@ def joke(update: Update, context: CallbackContext):
 
 #implementing unknown handler
 joke_handler = MessageHandler(Filters.text, joke)
-
-# implementing help command
-def help_func(update: Update, context: CallbackContext):
-    print(update)
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Let's help...Safety first☝️!")
-
-#help command handler
-help_handler = CommandHandler('asp', help_func)
 
 #implementing default (unknown)
 def unknown(update: Update, context: CallbackContext):
