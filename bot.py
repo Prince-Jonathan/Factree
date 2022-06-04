@@ -8,7 +8,7 @@ import logging
 import pandas as pd
 import numpy as np
 import tabula
-from telegram_bot.app import DATABASE_URI, engine, APP
+from telegram_bot.app import DATABASE_URI, engine, app
 import datetime
 from waitress import serve
 from telegram_bot.scripts import get_lot_code, get_vin, get_storage_loc, send_error_telegram
@@ -1003,5 +1003,5 @@ def main():
 
 if __name__=='__main__':
     main()
-    APP.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
     # serve(APP, host='0.0.0.0', port=int(PORT))
