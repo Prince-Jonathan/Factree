@@ -1003,5 +1003,5 @@ def main():
 
 if __name__=='__main__':
     main()
-    app.run(host="0.0.0.0", port=PORT, debug=True)
+    # app.run(host="0.0.0.0", port=PORT, debug=True)
     # serve(APP, host='0.0.0.0', port=int(PORT))
