@@ -914,7 +914,7 @@ def update_line(update:Update, context:CallbackContext):
         station, new_lot = update.split('.')
         station = station.upper()
         new_lot = new_lot.upper()
-        print('attempting to update line')
+        print(f'attempting to update line at:{station} with {new_lot}')
         line.iloc[station_names.index(station)]= new_lot
         # ****refactor code set for deleting lot if it is below*******
         storage_area = storage_area[np.invert(storage_area==new_lot)].fillna(np.nan)
