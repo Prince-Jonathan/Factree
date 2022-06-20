@@ -917,7 +917,7 @@ def update_line(update:Update, context:CallbackContext):
         print('attempting to update line')
         line.iloc[station_names.index(station)]= new_lot
         # ****refactor code set for deleting lot if it is below*******
-        storage_area[np.invert(storage_area==new_lot)].fillna(np.nan)
+        storage_area = storage_area[np.invert(storage_area==new_lot)].fillna(np.nan)
         context.bot.send_message(chat_id=update.effective_chat.id, text='Line station:{station} now has:{new_lot}'.format(station=station, new_lot=new_lot))
     line.to_sql('line_status', engine, index=False, if_exists='replace')
     storage_area.to_sql('skd_storage', engine, if_exists='replace')
