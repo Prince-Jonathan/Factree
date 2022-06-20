@@ -1,0 +1,54 @@
+{
+	"folders": [
+	  {
+		"path": "."
+	  }
+	],
+	"settings": {
+	  "editor.fontFamily": "Fira Code",
+	  "workbench.colorTheme": "Cobalt2",
+	  "workbench.iconTheme": "material-icon-theme",
+	  "editor.fontLigatures": true,
+	  "editor.formatOnSave": true,
+	  "editor.defaultFormatter": "SimonSiefke.prettier-vscode",
+	  "emmet.includeLanguages": {
+		"javascript": "javascriptreact"
+	  },
+  
+	  "editor.tokenColorCustomizations": {
+		"comments": "#00ced1",
+		"textMateRules": [
+		  {
+			"scope": "JSXNested",
+			"settings": {
+			  "foreground": "#ffffff"
+			}
+		  },
+		  {
+			"scope": "punctuation.definition.tag.jsx",
+			"settings": {
+			  "foreground": "#9effff"
+			}
+		  },
+		  {
+			"scope": "variable.other.readwrite",
+			"settings": {
+			  "foreground": "#acd3ff"
+			}
+		  },
+		  {
+			"scope": "storage.type.extends",
+			"settings": {
+			  "foreground": "#ff9d00"
+			}
+		  },
+		  {
+			"scope": "entity.name.class",
+			"settings": {
+			  "foreground": "#a5ff90"
+			}
+		  }
+		]
+	}
+	}
+  }
