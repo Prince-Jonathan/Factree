@@ -900,7 +900,6 @@ dispatch_handler = CommandHandler('dis', dispatch)
 def update_line(update: Update, context: CallbackContext):
     try:
         line = pd.read_sql_query("SELECT * FROM line_status;", DATABASE_URI)
-        context.bot.send_message(chat_id=update.effective_chat.id, text='processing..')
         print('successfully accessed line status')
     except:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Line information is currently unavailable")
@@ -920,7 +919,8 @@ def update_line(update: Update, context: CallbackContext):
         # ****refactor code set for deleting lot if it is below*******
         storage_area = storage_area[np.invert(storage_area==new_lot)].fillna(np.nan)
         print('updated line:\n', line)
-        context.bot.send_message(chat_id=update.effective_chat.id, text=f'Line station:{station} now has:{new_lot}')
+        # context.bot.send_message(chat_id=update.effective_chat.id, text=f'Line station:{station} now has:{new_lot}')
+        context.bot.send_message(chat_id=update.effective_chat.id, text='processed')
     line.to_sql('line_status', engine, index=False, if_exists='replace')
     storage_area.to_sql('skd_storage', engine, if_exists='replace')
     print('Line update: successful')
