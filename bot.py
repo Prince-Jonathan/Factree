@@ -897,7 +897,7 @@ def dispatch(update: Update, context: CallbackContext):
 dispatch_handler = CommandHandler('dis', dispatch)
 
 # update line information
-def update_line(update:Update, context:CallbackContext):
+def update_line(update: Update, context: CallbackContext):
     try:
         line = pd.read_sql_query("SELECT * FROM line_status;", DATABASE_URI)
         print('successfully accessed line status')
@@ -919,7 +919,7 @@ def update_line(update:Update, context:CallbackContext):
         # ****refactor code set for deleting lot if it is below*******
         storage_area = storage_area[np.invert(storage_area==new_lot)].fillna(np.nan)
         print('updated line:\n', line)
-        context.bot.send_message(chat_id=update.effective_chat.id, text='Line station:{station} now has:{new_lot}'.format(station=station, new_lot=new_lot))
+        # context.bot.send_message(chat_id=update.effective_chat.id, text='Line station:{station} now has:{new_lot}'.format(station=station, new_lot=new_lot))
     line.to_sql('line_status', engine, index=False, if_exists='replace')
     storage_area.to_sql('skd_storage', engine, if_exists='replace')
     print('Line update: successful')
