@@ -900,6 +900,7 @@ dispatch_handler = CommandHandler('dis', dispatch)
 def update_line(update: Update, context: CallbackContext):
     try:
         line = pd.read_sql_query("SELECT * FROM line_status;", DATABASE_URI)
+        context.bot.send_message(chat_id=update.effective_chat.id, text='processing..')
         print('successfully accessed line status')
     except:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Line information is currently unavailable")
@@ -913,7 +914,7 @@ def update_line(update: Update, context: CallbackContext):
     for update in context.args:
         station, new_lot = update.split('.')
         station = station.upper()
-        new_lot = new_lot.upper()
+        new_lot = get_lot_code(new_lot.upper())
         print(f'attempting to update line at:{station} with {new_lot}')
         line.iloc[station_names.index(station)]= new_lot
         # ****refactor code set for deleting lot if it is below*******
