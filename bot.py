@@ -937,21 +937,25 @@ def status_report(update: Update, context: CallbackContext):
     except:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Control sheet information is currently unavailable")
         return
-    for date_range in context.args:
-        [_from,_to] = date_range.split('.')
-        _from = format_date(_from)
-        _to = format_date(_to)
-        print("from",_from, "to", _to)
-        status_report = (control_sheet[
-            (control_sheet['problem_date']>=_from) & (control_sheet['problem_date']<=_to)]
-            .groupby('status')[['erb_no']]
-            .count()
-            .plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False).get_figure()
-        )
-        status_.savefig("report.jpg")
-        print('status report is ready to be sent')
-        with open("report.jpg", 'rb') as p:
-            context.bot.send_photo(chat_id=update.effective_chat.id, photo=p, filename=f"Here is here is a report {_from} to {_to} 📃")
+    try:
+        for date_range in context.args:
+            [_from,_to] = date_range.split('.')
+            _from = format_date(_from)
+            _to = format_date(_to)
+            print("from",_from, "to", _to)
+            status_report = (control_sheet[
+                (control_sheet['problem_date']>=_from) & (control_sheet['problem_date']<=_to)]
+                .groupby('status')[['erb_no']]
+                .count()
+                .plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False).get_figure()
+            )
+            status_.savefig("report.jpg")
+            print('status report is ready to be sent')
+            with open("report.jpg", 'rb') as p:
+                context.bot.send_photo(chat_id=update.effective_chat.id, photo=p, filename=f"Here is here is a report {_from} to {_to} 📃")
+    except:
+        print('An error occured while trying to generate status report')
+        send_error_telegram(update,context,"Something went wrong 🤔")
 
 # implementing handler
 status_report_handler = CommandHandler('str', status_report)
