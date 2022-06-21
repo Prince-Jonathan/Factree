@@ -941,6 +941,7 @@ def status_report(update: Update, context: CallbackContext):
         [_from,_to] = date_range.split('.')
         _from = format_date(_from)
         _to = format_date(_to)
+        print("from",_from, "to", _to)
         (control_sheet[
             (control_sheet['problem_date']>=_from) & (control_sheet['problem_date']<=_to)]
             .groupby('status')[['erb_no']]
