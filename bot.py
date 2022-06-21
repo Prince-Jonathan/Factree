@@ -6,12 +6,13 @@ from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandle
 from telegram import Update, InlineQueryResultArticle, InputTextMessageContent, KeyboardButton, ReplyKeyboardMarkup
 import logging
 import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
 import tabula
 from telegram_bot.app import DATABASE_URI, engine, app
 import datetime
 from waitress import serve
-from telegram_bot.scripts import get_lot_code, get_vin, get_storage_loc, send_error_telegram
+from telegram_bot.scripts import get_lot_code, get_vin, get_storage_loc, send_error_telegram, format_date
 
 PORT = int(os.environ.get('PORT', 443))
 TOKEN = os.environ.get('TOKEN')
@@ -914,12 +915,11 @@ def update_line(update: Update, context: CallbackContext):
         station, new_lot = change.split('.')
         station = station.upper()
         new_lot = get_lot_code(new_lot.upper())
-        print(f'attempting to update line at:{station} with {new_lot}')
+        print(f'attempting to update line at: {station} with {new_lot}')
         line.iloc[station_names.index(station)]= new_lot
         # ****refactor code set for deleting lot if it is below*******
         storage_area = storage_area[np.invert(storage_area==new_lot)].fillna(np.nan)
-        print('updated line:\n', line, "update properties\n", update)
-        context.bot.send_message(chat_id=update.effective_chat.id, text=f'Line station:{station} now has:{new_lot}')
+        context.bot.send_message(chat_id=update.effective_chat.id, text=f'Line station: {station} now has: {new_lot}')
     line.to_sql('line_status', engine, index=False, if_exists='replace')
     storage_area.to_sql('skd_storage', engine, if_exists='replace')
     print('Line update: successful')
@@ -927,6 +927,30 @@ def update_line(update: Update, context: CallbackContext):
 
 # implementing handler
 update_line_handler = CommandHandler('upl', update_line)
+
+# submit bar graph report of erb status
+def status_report(update: Update, context: CallbackContext):
+    try:
+        control_sheet = pd.read_sql_query("SELECT * FROM control_sheet;", DATABASE_URI)
+        print('successfully accessed control sheet')
+    except:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Control sheet information is currently unavailable")
+        return
+    for date_range in context.args:
+        [_from,_to] = temp.split('.')
+        _from = format_date(_from)
+        _to = format_date(_to)
+        (control_sheet[
+            (control_sheet['problem_date']>=_from) & (control_sheet['problem_date']<=_to)]
+            .groupby('status')[['erb_no']]
+            .count()
+            .plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False)
+        )
+        plt.savefig("report.jpg")
+        context.bot.send_photo(chat_id=update.effective_chat.id, photo=open('report.jpg', 'rb'))
+
+# implementing handler
+status_report_handler = CommandHandler('str', status_report)
 
 # return next lot to line's location
 def next_loc(update:Update, context:CallbackContext):
@@ -990,6 +1014,7 @@ def main():
     dispatcher.add_handler(non_dispatch_handler)
     dispatcher.add_handler(dispatch_handler)
     dispatcher.add_handler(update_line_handler)
+    dispatcher.add_handler(status_report_handler)
     dispatcher.add_handler(next_loc_handler)
     dispatcher.add_handler(joke_handler)
     dispatcher.add_handler(unknown_handler)
