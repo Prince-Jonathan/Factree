@@ -937,7 +937,7 @@ def status_report(update: Update, context: CallbackContext):
         context.bot.send_message(chat_id=update.effective_chat.id, text="Control sheet information is currently unavailable")
         return
     for date_range in context.args:
-        [_from,_to] = temp.split('.')
+        [_from,_to] = date_range.split('.')
         _from = format_date(_from)
         _to = format_date(_to)
         (control_sheet[
