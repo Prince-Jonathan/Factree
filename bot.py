@@ -949,7 +949,8 @@ def status_report(update: Update, context: CallbackContext):
             .plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False)
         )
         plt.savefig("report.jpg")
-        context.bot.send_photo(chat_id=update.effective_chat.id, photo=open('report.jpg', 'rb'))
+        with open("report.jpg", 'rb') as p:
+            context.bot.send_photo(chat_id=update.effective_chat.id, p, caption="Here is here is a report {_from} to {_to} 📃")
 
 # implementing handler
 status_report_handler = CommandHandler('str', status_report)
