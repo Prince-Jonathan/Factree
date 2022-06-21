@@ -918,7 +918,8 @@ def update_line(update: Update, context: CallbackContext):
         line.iloc[station_names.index(station)]= new_lot
         # ****refactor code set for deleting lot if it is below*******
         storage_area = storage_area[np.invert(storage_area==new_lot)].fillna(np.nan)
-        print('updated line:\n', line)
+        print('updated line:\n', line, "update properties\n", update)
+
         # context.bot.send_message(chat_id=update.effective_chat.id, text=f'Line station:{station} now has:{new_lot}')
         context.bot.send_message(chat_id=update.effective_chat.id, text='processed')
     line.to_sql('line_status', engine, index=False, if_exists='replace')
