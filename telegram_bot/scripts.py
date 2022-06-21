@@ -1,3 +1,5 @@
+import datetime
+
 def get_lot_code(lot):
 	char = len(lot)
 	if char < 6:
