@@ -910,8 +910,8 @@ def update_line(update: Update, context: CallbackContext):
     except:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Attempt to access storage area info was unsuccessful")
         return
-    for update in context.args:
-        station, new_lot = update.split('.')
+    for change in context.args:
+        station, new_lot = change.split('.')
         station = station.upper()
         new_lot = get_lot_code(new_lot.upper())
         print(f'attempting to update line at:{station} with {new_lot}')
@@ -919,9 +919,7 @@ def update_line(update: Update, context: CallbackContext):
         # ****refactor code set for deleting lot if it is below*******
         storage_area = storage_area[np.invert(storage_area==new_lot)].fillna(np.nan)
         print('updated line:\n', line, "update properties\n", update)
-
-        # context.bot.send_message(chat_id=update.effective_chat.id, text=f'Line station:{station} now has:{new_lot}')
-        context.bot.send_message(chat_id=update.effective_chat.id, text='processed')
+        context.bot.send_message(chat_id=update.effective_chat.id, text=f'Line station:{station} now has:{new_lot}')
     line.to_sql('line_status', engine, index=False, if_exists='replace')
     storage_area.to_sql('skd_storage', engine, if_exists='replace')
     print('Line update: successful')
