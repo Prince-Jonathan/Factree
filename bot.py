@@ -949,7 +949,7 @@ def status_report(update: Update, context: CallbackContext):
                 .count()
                 .plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False).get_figure()
             )
-            status_.savefig("report.jpg")
+            plt.savefig("report.jpg")
             print('status report is ready to be sent')
             with open("report.jpg", 'rb') as p:
                 context.bot.send_photo(chat_id=update.effective_chat.id, photo=p, filename=f"Here is here is a report {_from} to {_to} 📃")
