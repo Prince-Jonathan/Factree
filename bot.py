@@ -950,7 +950,7 @@ def status_report(update: Update, context: CallbackContext):
         )
         plt.savefig("report.jpg")
         with open("report.jpg", 'rb') as p:
-            context.bot.send_photo(chat_id=update.effective_chat.id, p, caption=f"Here is here is a report {_from} to {_to} 📃")
+            context.bot.send_photo(chat_id=update.effective_chat.id, photo=p, filename=f"Here is here is a report {_from} to {_to} 📃")
 
 # implementing handler
 status_report_handler = CommandHandler('str', status_report)
