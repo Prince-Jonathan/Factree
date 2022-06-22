@@ -950,9 +950,9 @@ def status_report(update: Update, context: CallbackContext):
                 .plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False).get_figure()
             )
             plt.savefig("report.jpg")
-            print('status report is ready to be sent')
-            with open("report.jpg", 'rb') as p:
-                context.bot.send_photo(chat_id=update.effective_chat.id, photo=p, filename=f"Here is here is a report {_from} to {_to} 📃")
+            # with open("report.jpg", 'rb') as p:
+            #     context.bot.send_photo(chat_id=update.effective_chat.id, photo=p, filename=f"Here is here is a report {_from} to {_to} 📃")
+            print('status report is sent')
     except:
         print('An error occured while trying to generate status report')
         send_error_telegram(update,context,"Something went wrong 🤔")
