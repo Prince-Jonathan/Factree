@@ -939,14 +939,19 @@ def status_report(update: Update, context: CallbackContext):
         return
     try:
         for date_range in context.args:
-            [_from,_to] = date_range.split('.')
-            _from = format_date(_from)
-            _to = format_date(_to)
-            print("from",_from, "to", _to)
-            status_report = control_sheet[(control_sheet['problem_date']>=_from) & (control_sheet['problem_date']<=_to)].groupby('status')[['erb_no']].count().plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False).get_figure()
-            # plt.savefig("report.jpg")
+            [start,end] = date_range.split('.')
+            start = format_date(start)
+            end = format_date(end)
+            print("from",start, "to", end)
+            status_report = (control_sheet[
+                (control_sheet['problem_date']>=start) & (control_sheet['problem_date']<=end)]
+                .groupby('status')[['erb_no']]
+                .count()
+                .plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False).get_figure()
+            )
+            plt.savefig("report.jpg")
             # with open("report.jpg", 'rb') as p:
-            #     context.bot.send_photo(chat_id=update.effective_chat.id, photo=p, filename=f"Here is here is a report {_from} to {_to} 📃")
+            #     context.bot.send_photo(chat_id=update.effective_chat.id, photo=p, filename=f"Here is here is a report {start} to {end} 📃")
             print('status report is sent')
     except:
         print('An error occured while trying to generate status report')
