@@ -943,12 +943,7 @@ def status_report(update: Update, context: CallbackContext):
             _from = format_date(_from)
             _to = format_date(_to)
             print("from",_from, "to", _to)
-            status_report = (control_sheet[
-                (control_sheet['problem_date']>=_from) & (control_sheet['problem_date']<=_to)]
-                .groupby('status')[['erb_no']]
-                .count()
-                .plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False).get_figure()
-            )
+            status_report = control_sheet[(control_sheet['problem_date']>=_from) & (control_sheet['problem_date']<=_to)].groupby('status')[['erb_no']].count().plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False).get_figure()
             # plt.savefig("report.jpg")
             # with open("report.jpg", 'rb') as p:
             #     context.bot.send_photo(chat_id=update.effective_chat.id, photo=p, filename=f"Here is here is a report {_from} to {_to} 📃")
