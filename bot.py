@@ -937,25 +937,25 @@ def status_report(update: Update, context: CallbackContext):
     except:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Control sheet information is currently unavailable")
         return
-    try:
-        for date_range in context.args:
-            [start,end] = date_range.split('.')
-            start = format_date(start)
-            end = format_date(end)
-            print("from",start, "to", end)
-            # status_report = (control_sheet[
-            #     (control_sheet['problem_date']>=start) & (control_sheet['problem_date']<=end)]
-            #     .groupby('status')[['erb_no']]
-            #     .count()
-            #     .plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False).get_figure()
-            # )
-            # status_report.savefig("report.jpg")
-            # with open("report.jpg", 'rb') as p:
-            #     context.bot.send_photo(chat_id=update.effective_chat.id, photo=p, filename=f"Here is here is a report {start} to {end} 📃")
-            print('status report is sent')
-    except:
-        print('An error occured while trying to generate status report')
-        send_error_telegram(update,context,"Something went wrong 🤔")
+    # try:
+    for date_range in context.args:
+        [start,end] = date_range.split('.')
+        start = format_date(start)
+        end = format_date(end)
+        print("from",start, "to", end)
+        status_report = (control_sheet[
+            (control_sheet['problem_date']>=start) & (control_sheet['problem_date']<=end)]
+            .groupby('status')[['erb_no']]
+            .count()
+            .plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False).get_figure()
+        )
+        # status_report.savefig("report.jpg")
+        # with open("report.jpg", 'rb') as p:
+        #     context.bot.send_photo(chat_id=update.effective_chat.id, photo=p, filename=f"Here is here is a report {start} to {end} 📃")
+        print('status report is sent')
+    # except:
+    #     print('An error occured while trying to generate status report')
+    #     send_error_telegram(update,context,"Something went wrong 🤔")
 
 # implementing handler
 status_report_handler = CommandHandler('str', status_report)
