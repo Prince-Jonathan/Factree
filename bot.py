@@ -947,7 +947,7 @@ def status_report(update: Update, context: CallbackContext):
             (control_sheet['problem_date']>=start) & (control_sheet['problem_date']<=end)]
             .groupby('status')[['erb_no']]
             .count()
-            .plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False).get_figure()
+            # .plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False).get_figure()
         )
         # status_report.savefig("report.jpg")
         # with open("report.jpg", 'rb') as p:
