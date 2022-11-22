@@ -124,14 +124,10 @@ def import_doc(update: Update, context: CallbackContext):
                     # remove zero rows, if any
                     data = data.loc[(data!=0).any(axis=1)]
                     df= pd.concat([data,df])
-                else:
-                    context.bot.send_message(chat_id=update.effective_chat.id,reply_to_message_id=update.message.message_id,  text="Something went wrong...🤔")
-                    context.bot.send_message(chat_id=update.effective_chat.id,reply_to_message_id=update.message.message_id,  text="Consider renaming sheet that contains data in excel file to either VIN or TTMG")
                 print(f"No. of accessed sheets: {sheet_no}")
         except:
             df = pd.DataFrame()
             tables = tabula.read_pdf(r"vin_temp", pages = "all",stream=True,area=(138.391,15.26,562.508,794.036))
-            print('Table from PDF file: \n', tables)
             for temp in tables:
                 temp.columns = temp.columns.str.replace(" ", "_",regex=False)
                 temp.columns = temp.columns.str.lower()
