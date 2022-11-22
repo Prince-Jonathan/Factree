@@ -1,4 +1,5 @@
 import datetime
+import asyncio	
 
 def get_lot_code(lot):
 	char = len(lot)
@@ -28,3 +29,16 @@ def send_error_telegram(update, context,msg):
 
 def format_date(temp):
 	return datetime.datetime.strptime(temp,'%y%m%d').strftime('%Y-%m-%d')	
+
+async def generate_report(date_range, control_sheet):
+	[start,end] = date_range.split('.')
+	start = format_date(start)
+	end = format_date(end)
+	print("start",start, "end", end)
+	await asyncio.wait((control_sheet[
+	    (control_sheet['problem_date']>=start) & (control_sheet['problem_date']<=end)]
+	    .groupby('status')[['erb_no']]
+	    .count()
+	    .plot(kind='bar', title='ERB Status Report', xlabel='Status', ylabel='Fequency', figsize=(10,3), legend=False).get_figure()
+	    .savefig("report.jpg", dpi=150)
+	));

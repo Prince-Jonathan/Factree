@@ -1,6 +1,7 @@
 '''
 Return the VIN of a specific lot number
 '''
+import asyncio
 import os
 from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, Filters,  InlineQueryHandler
 from telegram import Update, InlineQueryResultArticle, InputTextMessageContent, KeyboardButton, ReplyKeyboardMarkup
@@ -27,6 +28,21 @@ dispatcher = updater.dispatcher
 
 station_names = ['T1','T4','T5','T6','INSP1', 'INSP2','INSP3','INSP4']
 cbu_yard_names = ['Lot1','Lot2','Lot3','Lot4','Lot5', 'Lot6','Lot7','Lot8','Lot9']
+
+def generate_report(date_range, control_sheet, start, end):
+    # [start,end] = date_range.split('.')
+    # start = format_date(start)
+    # end = format_date(end)
+    print("start",start, "end", end)
+    (control_sheet[
+        (control_sheet['problem_date']>=start) & (control_sheet['problem_date']<=end)]
+        .groupby('status')[['erb_no']]
+        .count()
+        .plot(kind='bar', title='ERB Status Report', xlabel='Status', ylabel='Fequency', figsize=(10,3), legend=False).get_figure()
+        .savefig("report.jpg", dpi=150)
+    );
+    print('done')
+
 
 #start command function
 def start(update: Update, context: CallbackContext):
@@ -67,7 +83,7 @@ Commands:
 /nxt - returns location of next line to be unpacked from storage area [eg. /nxt]
 
 Data Importation:
-vin - caption excel file with VIN list as VIN to import VIN lists.
+vin - caption excel file with VIN list as VIN to import VIN lists. NB: Excel file sheet name should be named 'VIN' or 'TTMG'
 storage area - caption excel file with storage area condition as storage area to import storage area updates.
 seq - caption excel file with VIN list as seq to generate container receiving sequence according to FIFO.
         '''
@@ -108,6 +124,9 @@ def import_doc(update: Update, context: CallbackContext):
                     # remove zero rows, if any
                     data = data.loc[(data!=0).any(axis=1)]
                     df= pd.concat([data,df])
+                else:
+                    context.bot.send_message(chat_id=update.effective_chat.id,reply_to_message_id=update.message.message_id,  text="Something went wrong...🤔")
+                    context.bot.send_message(chat_id=update.effective_chat.id,reply_to_message_id=update.message.message_id,  text="Consider renaming sheet that contains data in excel file to either VIN or TTMG")
                 print(f"No. of accessed sheets: {sheet_no}")
         except:
             df = pd.DataFrame()
@@ -148,7 +167,7 @@ def import_doc(update: Update, context: CallbackContext):
                 con.execute('ALTER TABLE "vin_list" ADD PRIMARY KEY ("lot_no");')
             print('Database primary key: set')
             # send success confirmation to telegram
-            context.bot.send_message(chat_id=update.effective_chat.id, reply_to_message_id=update.message.message_id, text="alright...done☺️👍")
+            context.bot.send_message(chat_id=update.effective_chat.id, reply_to_message_id=update.message.message_id, text="alright!...done☺️👍")
         except:
             print("An error occured: Inserting into database")
             context.bot.send_message(chat_id=update.effective_chat.id,reply_to_message_id=update.message.message_id,  text="Something went wrong...🤔")
@@ -930,9 +949,9 @@ def update_line(update: Update, context: CallbackContext):
 update_line_handler = CommandHandler('upl', update_line)
 
 # submit bar graph report of erb status
-def status_report(update: Update, context: CallbackContext):
+async def status_report(update: Update, context: CallbackContext):
     try:
-        control_sheet = pd.read_sql_query("SELECT * FROM control_sheet;", DATABASE_URI)
+        control_sheet = await asyncio.wait(pd.read_sql_query("SELECT * FROM control_sheet;", DATABASE_URI))
         print('successfully accessed control sheet')
     except:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Control sheet information is currently unavailable")
@@ -942,14 +961,8 @@ def status_report(update: Update, context: CallbackContext):
         [start,end] = date_range.split('.')
         start = format_date(start)
         end = format_date(end)
-        print("from",start, "to", end)
-        status_report = (control_sheet[
-            (control_sheet['problem_date']>=start) & (control_sheet['problem_date']<=end)]
-            .groupby('status')[['erb_no']]
-            .count()
-            # .plot(kind='bar', title='ERB Status Report',xlabel='Status', ylabel='Fequency', legend=False).get_figure()
-        )
-        # status_report.savefig("report.jpg")
+        await asyncio.wait(generate_report(date_range, control_sheet, start, end))
+        # plt.savefig("report.jpg", dpi=150)
         # with open("report.jpg", 'rb') as p:
         #     context.bot.send_photo(chat_id=update.effective_chat.id, photo=p, filename=f"Here is here is a report {start} to {end} 📃")
         print('status report is sent')
@@ -999,7 +1012,8 @@ unknown_handler = MessageHandler(Filters.command, unknown)
 def error(update:Update, context:CallbackContext):
     logger.warning('Update: {update} caused error: {error}'.format(update=update,error=context.error))
 
-def main():
+async def main():
+
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(help_func_handler)
     dispatcher.add_handler(vin_handler)
@@ -1028,14 +1042,16 @@ def main():
     dispatcher.add_handler(unknown_handler)
     dispatcher.add_error_handler(error)
 
-    # updater.start_polling()
-    updater.start_webhook(listen="0.0.0.0",
-                            port=int(PORT),
-                            url_path=TOKEN,
-                            webhook_url="https://factree.herokuapp.com/"+ TOKEN)
+    updater.start_polling()
+    # updater.start_webhook(listen="0.0.0.0",
+    #                         port=int(PORT),
+    #                         url_path=TOKEN,
+    #                         webhook_url="https://factree.herokuapp.com/"+ TOKEN)
     updater.idle()
 
 if __name__=='__main__':
-    main()
+    event_loop =asyncio.get_event_loop()
+    event_loop .run_until_complete(main())
+    
     # app.run(host="0.0.0.0", port=PORT, debug=True)
     # serve(APP, host='0.0.0.0', port=int(PORT))
