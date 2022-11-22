@@ -131,6 +131,7 @@ def import_doc(update: Update, context: CallbackContext):
         except:
             df = pd.DataFrame()
             tables = tabula.read_pdf(r"vin_temp", pages = "all",stream=True,area=(138.391,15.26,562.508,794.036))
+            print('Table from PDF file: \n', tables)
             for temp in tables:
                 temp.columns = temp.columns.str.replace(" ", "_",regex=False)
                 temp.columns = temp.columns.str.lower()
@@ -167,7 +168,7 @@ def import_doc(update: Update, context: CallbackContext):
                 con.execute('ALTER TABLE "vin_list" ADD PRIMARY KEY ("lot_no");')
             print('Database primary key: set')
             # send success confirmation to telegram
-            context.bot.send_message(chat_id=update.effective_chat.id, reply_to_message_id=update.message.message_id, text="alright!...done☺️👍")
+            context.bot.send_message(chat_id=update.effective_chat.id, reply_to_message_id=update.message.message_id, text="alright...done☺️👍")
         except:
             print("An error occured: Inserting into database")
             context.bot.send_message(chat_id=update.effective_chat.id,reply_to_message_id=update.message.message_id,  text="Something went wrong...🤔")
